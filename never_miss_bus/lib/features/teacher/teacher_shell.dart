@@ -70,6 +70,11 @@ class TeacherShell extends ConsumerWidget {
               selectedIcon: const Icon(Icons.person_rounded),
               label: tr('Profile', 'प्रोफ़ाइल'),
             ),
+            NavigationDestination(
+              icon: const Icon(Icons.menu_book_outlined),
+              selectedIcon: const Icon(Icons.menu_book_rounded),
+              label: tr('Class work', 'क्लास वर्क'),
+            ),
           ],
         ),
       ),

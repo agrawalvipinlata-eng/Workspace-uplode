@@ -204,6 +204,11 @@ class StudentDrawer extends ConsumerWidget {
                   path: '/student/alerts',
                   badge: unread,
                 ),
+                item(
+                  icon: Icons.menu_book_rounded,
+                  label: tr('Homework', 'होमवर्क'),
+                  path: '/student/home/homework',
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Divider(),

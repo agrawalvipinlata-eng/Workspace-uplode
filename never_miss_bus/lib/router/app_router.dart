@@ -29,6 +29,8 @@ import '../features/teacher/teacher_shell.dart';
 import '../features/teacher/screens/teacher_class_screen.dart';
 import '../features/teacher/screens/teacher_applications_screen.dart';
 import '../features/teacher/screens/teacher_profile_screen.dart';
+import '../features/teacher/screens/teacher_schoolwork_screen.dart';
+import '../features/student/screens/homework_screen.dart';
 import '../features/student/screens/student_alerts_screen.dart';
 import '../features/student/screens/student_bus_details_screen.dart';
 import '../features/student/screens/student_home_screen.dart';
@@ -116,6 +118,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                   path: 'attendance',
                   builder: (_, __) => const MyAttendanceScreen(),
                 ),
+                GoRoute(
+                  path: 'homework',
+                  builder: (_, __) => const HomeworkScreen(),
+                ),
               ],
             ),
           ],),
@@ -189,6 +195,12 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             GoRoute(
               path: '/teacher/profile',
               builder: (_, __) => const TeacherProfileScreen(),
+            ),
+          ],),
+          StatefulShellBranch(routes: <RouteBase>[
+            GoRoute(
+              path: '/teacher/schoolwork',
+              builder: (_, __) => const TeacherSchoolworkScreen(),
             ),
           ],),
         ],

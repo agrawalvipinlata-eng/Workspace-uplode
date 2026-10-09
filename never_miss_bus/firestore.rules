@@ -221,6 +221,32 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
+    match /diaries/{diaryId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.classSection == me().classSection)
+        || (isStudent() && resource.data.classSection == me().classSection);
+      allow create, update: if isAdmin()
+        || (isTeacher()
+            && request.resource.data.teacherUid == request.auth.uid
+            && request.resource.data.classSection == me().classSection);
+      allow delete: if isAdmin();
+    }
+
+    match /homework/{homeworkId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.classSection == me().classSection)
+        || (isStudent() && resource.data.classSection == me().classSection);
+      allow create: if isAdmin()
+        || (isTeacher()
+            && request.resource.data.teacherUid == request.auth.uid
+            && request.resource.data.classSection == me().classSection);
+      allow update, delete: if isAdmin()
+        || (isTeacher()
+            && resource.data.teacherUid == request.auth.uid
+            && resource.data.classSection == me().classSection);
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;
