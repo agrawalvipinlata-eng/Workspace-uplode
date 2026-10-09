@@ -5,7 +5,10 @@ import 'package:never_miss_bus/core/utils/validators.dart';
 import 'package:never_miss_bus/models/bus_stop.dart';
 import 'package:never_miss_bus/models/geo_point_data.dart';
 import 'package:never_miss_bus/models/live_location.dart';
+import 'package:never_miss_bus/models/app_user.dart';
 import 'package:never_miss_bus/services/eta_service.dart';
+import 'package:never_miss_bus/services/attendance_service.dart';
+import 'package:never_miss_bus/services/schoolwork_service.dart';
 
 void main() {
   group('Validators', () {
@@ -156,6 +159,25 @@ void main() {
       expect(UserRole.tryParse(''), isNull);
       expect(UserRole.tryParse(null), isNull);
       expect(UserRole.tryParse('admin'), UserRole.admin);
+    });
+  });
+
+  group('Release safety helpers', () {
+    test('attendance and schoolwork use stable ISO date keys', () {
+      final DateTime date = DateTime(2026, 1, 7);
+      expect(AttendanceService.dateKey(date), '2026-01-07');
+      expect(SchoolworkService.dateKey(date), '2026-01-07');
+    });
+
+    test('fee due never becomes negative after overpayment data', () {
+      const AppUser user = AppUser(
+        uid: 'u1',
+        role: UserRole.student,
+        fullName: 'Student',
+        email: 'student@example.com',
+        fees: <String, dynamic>{'total': 100, 'paid': 125},
+      );
+      expect(user.feeDue, 0);
     });
   });
 }
