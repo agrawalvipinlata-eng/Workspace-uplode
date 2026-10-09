@@ -35,6 +35,7 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (request.auth.uid == uid
             || isAdmin()
+            || (isStudent() && resource.data.role == 'teacher')
             || (isTeacher()
                 && resource.data.role == 'student'
                 && resource.data.classSection == me().classSection));

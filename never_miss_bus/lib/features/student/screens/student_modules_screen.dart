@@ -33,7 +33,7 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
       _ModuleItem('Track my bus', 'Live location and ETA', Icons.map_rounded,
           '/student/map'),
       _ModuleItem('My stop', 'Route and stop details', Icons.pin_drop_rounded,
-          '/student/mystop'),
+          '/student/home/stops'),
       _ModuleItem('Bus schedule', 'Stops and timings', Icons.schedule_rounded,
           '/student/home/bus'),
       _ModuleItem('School contacts', 'Call or email the school',
@@ -86,6 +86,7 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
         ],
       ),
       body: ResponsiveBody(
+        scrollable: false,
         child: ListView(
           children: <Widget>[
             Text(

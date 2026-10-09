@@ -778,6 +778,8 @@ class _HomeContent extends ConsumerWidget {
         ref.read(schoolConfigProvider).valueOrNull;
     final String? phone = school?['phone'] as String?;
     final String? email = school?['email'] as String?;
+    final List<AppUser> teachers =
+        ref.read(allTeachersProvider).valueOrNull ?? const <AppUser>[];
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -803,9 +805,36 @@ class _HomeContent extends ConsumerWidget {
                 subtitle: const Text('Email school office'),
                 onTap: () => launchUrl(Uri.parse('mailto:$email')),
               ),
+            if (teachers.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text('Class teachers'),
+              ),
+            for (final AppUser teacher in teachers)
+              ListTile(
+                leading: const CircleAvatar(
+                  child: Icon(Icons.school_rounded, size: 18),
+                ),
+                title: Text(teacher.fullName),
+                subtitle: Text(<String>[
+                  if (teacher.classSection != null)
+                    'Class ${teacher.classSection}',
+                  if (teacher.phone != null && teacher.phone!.isNotEmpty)
+                    teacher.phone!,
+                ].join(' • ')),
+                trailing: teacher.phone == null || teacher.phone!.isEmpty
+                    ? null
+                    : const Icon(Icons.call_rounded),
+                onTap: teacher.phone == null || teacher.phone!.isEmpty
+                    ? null
+                    : () => launchUrl(Uri.parse('tel:${teacher.phone}')),
+              ),
             if ((phone == null || phone.isEmpty) &&
-                (email == null || email.isEmpty))
-              const ListTile(title: Text('Admin has not added contacts yet.')),
+                (email == null || email.isEmpty) &&
+                teachers.isEmpty)
+              const ListTile(
+                title: Text('Admin has not added contacts yet.'),
+              ),
           ],
         ),
       ),
