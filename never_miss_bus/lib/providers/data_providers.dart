@@ -10,6 +10,7 @@ import '../models/bus_stop.dart';
 import '../models/live_location.dart';
 import '../models/trip.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 import 'app_providers.dart';
 
 
@@ -148,12 +149,19 @@ final StreamProvider<Map<String, dynamic>?> schoolConfigProvider =
       ref.watch(firestoreServiceProvider).watchSchoolConfig(), null,),
 );
 
-/// ── Admin-only streams (rules reject non-admin callers) ──────────────
+/// ── Role-scoped user streams ─────────────────────────────────────────
 final StreamProvider<List<AppUser>> allStudentsProvider =
     StreamProvider<List<AppUser>>(
-  (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchUsersByRole('student'),
-      const <AppUser>[],),
+  (Ref ref) {
+    final AppUser? me = ref.watch(myProfileProvider).valueOrNull;
+    final FirestoreService service = ref.watch(firestoreServiceProvider);
+    final Stream<List<AppUser>> source = me?.role == UserRole.teacher
+        ? (me.classSection == null
+            ? Stream<List<AppUser>>.value(const <AppUser>[])
+            : service.watchStudentsOfClass(me.classSection!))
+        : service.watchUsersByRole('student');
+    return _quiet(source, const <AppUser>[]);
+  },
 );
 
 final StreamProvider<List<AppUser>> allTeachersProvider =

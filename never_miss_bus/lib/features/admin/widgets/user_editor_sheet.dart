@@ -508,6 +508,9 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
 
   bool get isStudent => widget.user.role.name == 'student';
 
+  bool get isTeacherViewer =>
+      ref.read(myProfileProvider).valueOrNull?.role.name == 'teacher';
+
   @override
   void dispose() {
     _editName.dispose();
@@ -873,7 +876,7 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
             const Divider(),
             const SizedBox(height: 10),
 
-            DropdownButtonFormField<String>(
+            if (!isTeacherViewer) DropdownButtonFormField<String>(
               value: _busId,
               decoration: const InputDecoration(hintText: 'Assigned bus'),
               items: <DropdownMenuItem<String>>[
@@ -892,7 +895,7 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
                 _stopId = null;
               }),
             ),
-            if (isStudent && _busId != null) ...<Widget>[
+            if (!isTeacherViewer && isStudent && _busId != null) ...<Widget>[
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: stops.any((BusStop s) => s.id == _stopId)
@@ -914,15 +917,15 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
                 onChanged: (String? v) => setState(() => _stopId = v),
               ),
             ],
-            const SizedBox(height: 18),
-            FilledButton(
+            if (!isTeacherViewer) const SizedBox(height: 18),
+            if (!isTeacherViewer) FilledButton(
               onPressed: _saving ? null : _saveAssignment,
               child: const Text('Save assignment'),
             ),
             const SizedBox(height: 10),
             // ── Device / login status (single-device security) ──
-            const SizedBox(height: 10),
-            Builder(
+            if (!isTeacherViewer) const SizedBox(height: 10),
+            if (!isTeacherViewer) Builder(
               builder: (BuildContext ctx) {
                 final Map<String, dynamic>? dev = widget.user.activeDevice;
                 final String? devId = dev?['id'] as String?;
@@ -978,7 +981,7 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
                 );
               },
             ),
-            if (isStudent) ...<Widget>[
+            if (!isTeacherViewer && isStudent) ...<Widget>[
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: _saving ? null : _resetPassword,
@@ -987,7 +990,7 @@ class _UserManageSheetState extends ConsumerState<UserManageSheet> {
               ),
             ],
             const SizedBox(height: 10),
-            OutlinedButton.icon(
+            if (!isTeacherViewer) OutlinedButton.icon(
               onPressed: _saving ? null : _toggleActive,
               icon: Icon(
                 widget.user.isActive

@@ -31,6 +31,16 @@ class FirestoreService {
       .snapshots()
       .map(_mapUsers);
 
+  /// Teacher query: Firestore rules require the class constraint to be
+  /// present in the query; client-side filtering alone is not security.
+  Stream<List<AppUser>> watchStudentsOfClass(String classSection) => _db
+      .collection('users')
+      .where('role', isEqualTo: 'student')
+      .where('classSection', isEqualTo: classSection)
+      .orderBy('fullName')
+      .snapshots()
+      .map(_mapUsers);
+
   Stream<List<AppUser>> watchStudentsOfBus(String busId) => _db
       .collection('users')
       .where('role', isEqualTo: 'student')

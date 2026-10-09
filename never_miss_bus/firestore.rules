@@ -33,7 +33,11 @@ service cloud.firestore {
       // Owner reads own doc (needed for session bootstrap even when
       // isActive=false, so the app can show "account disabled").
       allow read: if request.auth != null
-        && (request.auth.uid == uid || isStaff());
+        && (request.auth.uid == uid
+            || isAdmin()
+            || (isTeacher()
+                && resource.data.role == 'student'
+                && resource.data.classSection == me().classSection));
 
       // Owner self-writes limited to harmless fields — NEVER role/bus/
       // stop/isActive. Those are admin-only.
@@ -48,7 +52,10 @@ service cloud.firestore {
           (isAdmin()
             && request.resource.data.role in
                 ['student', 'driver', 'teacher', 'admin'])
-          || (isTeacher() && request.resource.data.role == 'student')
+          || (isTeacher()
+              && request.resource.data.role == 'student'
+              && request.resource.data.classSection == me().classSection
+              && !request.resource.data.keys().hasAny(['fees']))
         )
         && request.resource.data.fullName is string
         && request.resource.data.email is string
@@ -60,9 +67,17 @@ service cloud.firestore {
                   && request.resource.data.isActive == true)))
         || (isTeacher()
             && resource.data.role == 'student'
-            && request.resource.data.role == 'student');
+            && resource.data.classSection == me().classSection
+            && request.resource.data.role == 'student'
+            && request.resource.data.classSection == me().classSection
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['fullName', 'phone', 'contactEmail', 'documents',
+                           'photoB64', 'settings', 'updatedAt']));
 
-      allow delete: if isAdmin(); // permanent delete by admin
+      allow delete: if isAdmin()
+        || (isTeacher()
+            && resource.data.role == 'student'
+            && resource.data.classSection == me().classSection);
 
       // Private notification inbox.
       match /inbox/{notifId} {
