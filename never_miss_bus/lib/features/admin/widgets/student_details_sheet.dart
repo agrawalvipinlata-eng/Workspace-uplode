@@ -52,6 +52,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
     return '${d.day.toString().padLeft(2, '0')}-'
         '${d.month.toString().padLeft(2, '0')}-${d.year}';
   }
+
   late final TextEditingController _address =
       TextEditingController(text: widget.student.address ?? '');
   late final TextEditingController _admission =
@@ -62,13 +63,15 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   late Map<String, bool> _docs;
 
   late final TextEditingController _feeTotal = TextEditingController(
-      text: widget.student.feeTotal > 0
-          ? widget.student.feeTotal.toStringAsFixed(0)
-          : '',);
+    text: widget.student.feeTotal > 0
+        ? widget.student.feeTotal.toStringAsFixed(0)
+        : '',
+  );
   late final TextEditingController _feePaid = TextEditingController(
-      text: widget.student.feePaid > 0
-          ? widget.student.feePaid.toStringAsFixed(0)
-          : '',);
+    text: widget.student.feePaid > 0
+        ? widget.student.feePaid.toStringAsFixed(0)
+        : '',
+  );
   late final TextEditingController _feeDueDate =
       TextEditingController(text: widget.student.feeDueDate ?? '');
 
@@ -76,7 +79,14 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   String? _newPhotoB64; // naya photo (pick hua toh)
 
   static const List<String> _bloodGroups = <String>[
-    'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-',
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'O+',
+    'O-',
+    'AB+',
+    'AB-',
   ];
 
   @override
@@ -116,16 +126,21 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
       final List<int> bytes = await file.readAsBytes();
       if (bytes.length > 120000) {
         if (mounted) {
-          showNmbSnack(context,
-              'Photo bahut badi hai — chhoti photo choose karo.',
-              isError: true,);
+          showNmbSnack(
+            context,
+            'Photo bahut badi hai — chhoti photo choose karo.',
+            isError: true,
+          );
         }
         return;
       }
       setState(() => _newPhotoB64 = base64Encode(bytes));
       if (mounted) {
-        showNmbSnack(context, 'Photo selected ✓ — Save dabao.',
-            isSuccess: true,);
+        showNmbSnack(
+          context,
+          'Photo selected ✓ — Save dabao.',
+          isSuccess: true,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -196,14 +211,17 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
         final double cur = double.tryParse(_feePaid.text.trim()) ?? 0;
         _feePaid.text = (cur + amount).toStringAsFixed(0);
         setState(() {});
-        messenger.showSnackBar(const SnackBar(
-          backgroundColor: Color(0xFF1E8E3E),
-          content: Text('Payment recorded ✓',
-              style: TextStyle(color: Colors.white),),
-        ),);
+        messenger.showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF1E8E3E),
+            content: Text(
+              'Payment recorded ✓',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        );
       },
-      err: (AppFailure f) =>
-          showNmbSnack(context, f.message, isError: true),
+      err: (AppFailure f) => showNmbSnack(context, f.message, isError: true),
     );
   }
 
@@ -219,8 +237,11 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
     }
     if (total > 0 && paid > total) {
       setState(() => _saving = false);
-      showNmbSnack(context, 'Paid amount cannot exceed total fees.',
-          isError: true,);
+      showNmbSnack(
+        context,
+        'Paid amount cannot exceed total fees.',
+        isError: true,
+      );
       return;
     }
 
@@ -228,14 +249,11 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
         await ref.read(adminServiceProvider).updateUserProfile(
       uid: widget.student.uid,
       data: <String, dynamic>{
-        'fatherName':
-            _father.text.trim().isEmpty ? null : _father.text.trim(),
-        'motherName':
-            _mother.text.trim().isEmpty ? null : _mother.text.trim(),
+        'fatherName': _father.text.trim().isEmpty ? null : _father.text.trim(),
+        'motherName': _mother.text.trim().isEmpty ? null : _mother.text.trim(),
         'dob': _dobIso.trim().isEmpty ? null : _dobIso.trim(),
         'bloodGroup': _bloodGroup,
-        'address':
-            _address.text.trim().isEmpty ? null : _address.text.trim(),
+        'address': _address.text.trim().isEmpty ? null : _address.text.trim(),
         'contactEmail': _contactEmail.text.trim().isEmpty
             ? null
             : _contactEmail.text.trim(),
@@ -257,12 +275,118 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
       ok: (_) {
         final ScaffoldMessengerState m0 = ScaffoldMessenger.of(context);
         Navigator.of(context).pop();
-        m0.showSnackBar(const SnackBar(
-          backgroundColor: Color(0xFF1E8E3E),
-          content: Text('Student details saved.',
-              style: TextStyle(color: Colors.white),),
-        ),);
+        m0.showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF1E8E3E),
+            content: Text(
+              'Student details saved.',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        );
       },
+      err: (AppFailure f) => showNmbSnack(context, f.message, isError: true),
+    );
+  }
+
+  Future<void> _promote() async {
+    if (ref.read(myProfileProvider).valueOrNull?.role.name != 'admin') return;
+    String? klass;
+    String? section;
+    final TextEditingController roll = TextEditingController(
+      text: widget.student.rollNumber ?? '',
+    );
+    final Set<String> remove = <String>{};
+    final Map<String, dynamic>? result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        builder: (BuildContext _, StateSetter setDialogState) => AlertDialog(
+          title: const Text('Promote student'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                DropdownButtonFormField<String>(
+                  value: klass,
+                  decoration: const InputDecoration(labelText: 'New class'),
+                  items: [
+                    for (final String c in SchoolClasses.classes)
+                      DropdownMenuItem<String>(value: c, child: Text(c)),
+                  ],
+                  onChanged: (String? v) => setDialogState(() => klass = v),
+                ),
+                DropdownButtonFormField<String>(
+                  value: section,
+                  decoration: const InputDecoration(labelText: 'New section'),
+                  items: [
+                    for (final String s in SchoolClasses.sections)
+                      DropdownMenuItem<String>(value: s, child: Text(s)),
+                  ],
+                  onChanged: (String? v) => setDialogState(() => section = v),
+                ),
+                TextField(
+                  controller: roll,
+                  keyboardType: TextInputType.number,
+                  decoration:
+                      const InputDecoration(labelText: 'New roll number'),
+                ),
+                const SizedBox(height: 12),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Remove documents not needed after promotion'),
+                ),
+                for (final String d in SchoolDocuments.all)
+                  CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(d),
+                    value: remove.contains(d),
+                    onChanged: (bool? v) => setDialogState(() {
+                      if (v == true) {
+                        remove.add(d);
+                      } else {
+                        remove.remove(d);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: klass == null ||
+                      section == null ||
+                      roll.text.trim().isEmpty
+                  ? null
+                  : () => Navigator.pop(dialogContext, <String, dynamic>{
+                        'classSection': SchoolClasses.label(klass!, section!),
+                        'rollNumber': roll.text.trim(),
+                        'remove': remove.toList(),
+                      }),
+              child: const Text('Promote'),
+            ),
+          ],
+        ),
+      ),
+    );
+    roll.dispose();
+    if (result == null || !mounted) return;
+    setState(() => _saving = true);
+    final Result<void> saved = await ref
+        .read(adminServiceProvider)
+        .promoteStudent(
+          uid: widget.student.uid,
+          classSection: result['classSection'] as String,
+          rollNumber: result['rollNumber'] as String,
+          removeDocuments: (result['remove'] as List<dynamic>).cast<String>(),
+        );
+    if (mounted) setState(() => _saving = false);
+    saved.when(
+      ok: (_) => showNmbSnack(context, 'Student promoted.', isSuccess: true),
       err: (AppFailure f) => showNmbSnack(context, f.message, isError: true),
     );
   }
@@ -273,8 +397,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   Widget build(BuildContext context) {
     final bool teacherReadOnly =
         ref.watch(myProfileProvider).valueOrNull?.role.name == 'teacher';
-    final int pending =
-        _docs.values.where((bool v) => !v).length;
+    final int pending = _docs.values.where((bool v) => !v).length;
 
     return Padding(
       padding:
@@ -286,10 +409,14 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              const Text('Details, Documents & Fees',
-                  style: NmbTypography.screenTitle,),
-              Text(widget.student.fullName,
-                  style: NmbTypography.bodySecondary,),
+              const Text(
+                'Details, Documents & Fees',
+                style: NmbTypography.screenTitle,
+              ),
+              Text(
+                widget.student.fullName,
+                style: NmbTypography.bodySecondary,
+              ),
               const SizedBox(height: 16),
 
               // ── Photo ──
@@ -305,24 +432,31 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                             ? MemoryImage(base64Decode(_newPhotoB64!))
                             : (widget.student.photoB64 != null
                                 ? MemoryImage(
-                                    base64Decode(widget.student.photoB64!),)
+                                    base64Decode(widget.student.photoB64!),
+                                  )
                                 : null),
                         child: (_newPhotoB64 == null &&
                                 widget.student.photoB64 == null)
-                            ? Icon(Icons.add_a_photo_rounded,
-                                color: NmbColors.primary, size: 30,)
+                            ? Icon(
+                                Icons.add_a_photo_rounded,
+                                color: NmbColors.primary,
+                                size: 30,
+                              )
                             : null,
                       ),
                     ),
                     const SizedBox(height: 6),
                     TextButton.icon(
                       onPressed: teacherReadOnly ? null : _pickPhoto,
-                      icon: const Icon(Icons.photo_library_rounded,
-                          size: 18,),
-                      label: Text(widget.student.photoB64 != null ||
-                              _newPhotoB64 != null
-                          ? 'Change photo'
-                          : 'Add student photo',),
+                      icon: const Icon(
+                        Icons.photo_library_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        widget.student.photoB64 != null || _newPhotoB64 != null
+                            ? 'Change photo'
+                            : 'Add student photo',
+                      ),
                     ),
                   ],
                 ),
@@ -330,24 +464,29 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
               const SizedBox(height: 8),
 
               // ── Personal details ──
-              const Text('Personal Details',
-                  style: NmbTypography.sectionTitle,),
+              const Text(
+                'Personal Details',
+                style: NmbTypography.sectionTitle,
+              ),
               const SizedBox(height: 10),
               TextField(
-                  readOnly: teacherReadOnly,
-                  controller: _father,
-                  decoration: _dec("Father's name"),),
+                readOnly: teacherReadOnly,
+                controller: _father,
+                decoration: _dec("Father's name"),
+              ),
               const SizedBox(height: 10),
               TextField(
-                  readOnly: teacherReadOnly,
-                  controller: _mother,
-                  decoration: _dec("Mother's name"),),
+                readOnly: teacherReadOnly,
+                controller: _mother,
+                decoration: _dec("Mother's name"),
+              ),
               const SizedBox(height: 10),
               TextField(
                 readOnly: teacherReadOnly,
                 controller: _contactEmail,
                 keyboardType: TextInputType.emailAddress,
-                decoration: _dec('Email (parent/student — optional)'),),
+                decoration: _dec('Email (parent/student — optional)'),
+              ),
               const SizedBox(height: 10),
               Row(
                 children: <Widget>[
@@ -357,8 +496,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                       controller: _dob,
                       onTap: teacherReadOnly ? null : _pickDob,
                       decoration: _dec('Date of birth').copyWith(
-                        suffixIcon:
-                            const Icon(Icons.calendar_month_rounded),
+                        suffixIcon: const Icon(Icons.calendar_month_rounded),
                       ),
                     ),
                   ),
@@ -370,7 +508,9 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                       items: <DropdownMenuItem<String>>[
                         for (final String b in _bloodGroups)
                           DropdownMenuItem<String>(
-                              value: b, child: Text(b),),
+                            value: b,
+                            child: Text(b),
+                          ),
                       ],
                       onChanged: teacherReadOnly
                           ? null
@@ -381,9 +521,10 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
               ),
               const SizedBox(height: 10),
               TextField(
-                  readOnly: teacherReadOnly,
-                  controller: _admission,
-                  decoration: _dec('Admission number'),),
+                readOnly: teacherReadOnly,
+                controller: _admission,
+                decoration: _dec('Admission number'),
+              ),
               const SizedBox(height: 10),
               TextField(
                 readOnly: teacherReadOnly,
@@ -396,21 +537,28 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
               // ── Documents checklist ──
               Row(
                 children: <Widget>[
-                  const Text('Documents',
-                      style: NmbTypography.sectionTitle,),
+                  const Text(
+                    'Documents',
+                    style: NmbTypography.sectionTitle,
+                  ),
                   const Spacer(),
                   if (pending > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3,),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: NmbColors.warningSoft,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text('$pending pending',
-                          style: NmbTypography.caption.copyWith(
-                              color: NmbColors.warning,
-                              fontWeight: FontWeight.w800,),),
+                      child: Text(
+                        '$pending pending',
+                        style: NmbTypography.caption.copyWith(
+                          color: NmbColors.warning,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -423,15 +571,21 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                   subtitle: Text(
                     _docs[d]! ? 'Submitted ✓' : 'Pending — not submitted',
                     style: NmbTypography.caption.copyWith(
-                      color: _docs[d]!
-                          ? NmbColors.success
-                          : NmbColors.warning,
+                      color: _docs[d]! ? NmbColors.success : NmbColors.warning,
                     ),
                   ),
                   value: _docs[d],
                   onChanged: teacherReadOnly
                       ? null
                       : (bool? v) => setState(() => _docs[d] = v ?? false),
+                ),
+              if (!teacherReadOnly &&
+                  ref.watch(myProfileProvider).valueOrNull?.role.name ==
+                      'admin')
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _promote,
+                  icon: const Icon(Icons.upgrade_rounded),
+                  label: const Text('Promote / change class and roll'),
                 ),
               const SizedBox(height: 12),
 
@@ -466,17 +620,19 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                 decoration: _dec('Due date (e.g. 2026-09-15)'),
               ),
               const SizedBox(height: 10),
-              if (!teacherReadOnly) OutlinedButton.icon(
-                onPressed: _saving ? null : _recordPayment,
-                icon: const Icon(Icons.receipt_long_rounded),
-                label: const Text('Record a payment (adds to history)'),
-              ),
+              if (!teacherReadOnly)
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _recordPayment,
+                  icon: const Icon(Icons.receipt_long_rounded),
+                  label: const Text('Record a payment (adds to history)'),
+                ),
               const SizedBox(height: 18),
 
-              if (!teacherReadOnly) FilledButton(
-                onPressed: _saving ? null : _save,
-                child: Text(_saving ? 'Saving…' : 'Save all details'),
-              ),
+              if (!teacherReadOnly)
+                FilledButton(
+                  onPressed: _saving ? null : _save,
+                  child: Text(_saving ? 'Saving…' : 'Save all details'),
+                ),
               const SizedBox(height: 8),
             ],
           ),

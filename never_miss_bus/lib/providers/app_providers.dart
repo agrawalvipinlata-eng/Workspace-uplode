@@ -17,6 +17,7 @@ import '../services/firestore_service.dart';
 import '../services/live_location_service.dart';
 import '../services/notification_service.dart';
 import '../services/schoolwork_service.dart';
+import '../services/remark_service.dart';
 
 /// ── Service singletons ────────────────────────────────────────────────
 final Provider<AuthService> authServiceProvider = Provider<AuthService>(
@@ -70,14 +71,17 @@ final Provider<AttendanceService> attendanceServiceProvider =
   (Ref ref) => AttendanceService(FirebaseFirestore.instance),
 );
 
-final Provider<LeaveService> leaveServiceProvider =
-    Provider<LeaveService>(
+final Provider<LeaveService> leaveServiceProvider = Provider<LeaveService>(
   (Ref ref) => LeaveService(FirebaseFirestore.instance),
 );
 
 final Provider<SchoolworkService> schoolworkServiceProvider =
     Provider<SchoolworkService>(
   (Ref ref) => SchoolworkService(FirebaseFirestore.instance),
+);
+
+final Provider<RemarkService> remarkServiceProvider = Provider<RemarkService>(
+  (Ref ref) => RemarkService(FirebaseFirestore.instance),
 );
 
 final Provider<ConnectivityService> connectivityServiceProvider =

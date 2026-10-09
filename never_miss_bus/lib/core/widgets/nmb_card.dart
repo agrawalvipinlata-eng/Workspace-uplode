@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/nmb_colors.dart';
 import '../theme/nmb_theme.dart';
 
@@ -43,7 +44,12 @@ class NmbCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          SystemSound.play(SystemSoundType.click);
+          onTap!();
+        },
+        splashColor: NmbColors.accent.withOpacity(0.22),
+        highlightColor: NmbColors.accent.withOpacity(0.08),
         borderRadius: BorderRadius.circular(NmbTheme.radiusCard),
         child: card,
       ),

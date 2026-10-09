@@ -37,7 +37,8 @@ class StudentProfileScreen extends ConsumerWidget {
     final bool confirmed = await showNmbConfirmDialog(
       context,
       title: 'Log out?',
-      message: 'You will need your Class + Roll number + password to sign back in.',
+      message:
+          'You will need your Class + Roll number + password to sign back in.',
       confirmLabel: 'Log out',
       destructive: true,
       icon: Icons.logout_rounded,
@@ -80,6 +81,9 @@ class StudentProfileScreen extends ConsumerWidget {
               message: 'Please contact the school office.',
             );
           }
+          final List<Map<String, dynamic>> remarks =
+              ref.watch(myRemarksProvider).valueOrNull ??
+                  const <Map<String, dynamic>>[];
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: <Widget>[
@@ -101,16 +105,20 @@ class StudentProfileScreen extends ConsumerWidget {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Text(tr('Profile', 'प्रोफ़ाइल'),
-                                style: NmbTypography.screenTitle
-                                    .copyWith(color: Colors.white),),
+                            Text(
+                              tr('Profile', 'प्रोफ़ाइल'),
+                              style: NmbTypography.screenTitle
+                                  .copyWith(color: Colors.white),
+                            ),
                             const Spacer(),
                             IconButton(
                               tooltip: 'Settings',
                               onPressed: () =>
                                   context.go('/student/profile/settings'),
-                              icon: const Icon(Icons.settings_outlined,
-                                  color: Colors.white,),
+                              icon: const Icon(
+                                Icons.settings_outlined,
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),
@@ -148,8 +156,7 @@ class StudentProfileScreen extends ConsumerWidget {
                               _headerChip('🎂 ${me.ageYears} yrs'),
                             if (me.bloodGroup != null)
                               _headerChip('🩸 ${me.bloodGroup}'),
-                            if (bus != null)
-                              _headerChip('🚌 ${bus.busNumber}'),
+                            if (bus != null) _headerChip('🚌 ${bus.busNumber}'),
                           ],
                         ),
                       ],
@@ -186,12 +193,14 @@ class StudentProfileScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                  Icons.directions_bus_rounded,
-                                  color: NmbColors.accentDark,),
+                                Icons.directions_bus_rounded,
+                                color: NmbColors.accentDark,
+                              ),
                             ),
                             title: Text(tr('Assigned bus', 'असाइन बस')),
                             trailing: Text(
-                              bus?.busNumber ?? tr('Not assigned', 'असाइन नहीं'),
+                              bus?.busNumber ??
+                                  tr('Not assigned', 'असाइन नहीं'),
                               style: NmbTypography.cardTitle,
                             ),
                           ),
@@ -205,8 +214,10 @@ class StudentProfileScreen extends ConsumerWidget {
                                 color: const Color(0xFFEFEAFF),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.pin_drop_rounded,
-                                  color: Color(0xFF7B61FF),),
+                              child: const Icon(
+                                Icons.pin_drop_rounded,
+                                color: Color(0xFF7B61FF),
+                              ),
                             ),
                             title: Text(tr('Assigned stop', 'असाइन स्टॉप')),
                             trailing: Text(
@@ -230,37 +241,47 @@ class StudentProfileScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(tr('Personal Details', 'व्यक्तिगत जानकारी'),
-                              style: NmbTypography.sectionTitle,),
+                          Text(
+                            tr('Personal Details', 'व्यक्तिगत जानकारी'),
+                            style: NmbTypography.sectionTitle,
+                          ),
                           const SizedBox(height: 10),
                           _InfoLine(
-                              label: tr("Father's Name", 'पिता का नाम'),
-                              value: me.fatherName ?? '—',),
+                            label: tr("Father's Name", 'पिता का नाम'),
+                            value: me.fatherName ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr("Mother's Name", 'माता का नाम'),
-                              value: me.motherName ?? '—',),
+                            label: tr("Mother's Name", 'माता का नाम'),
+                            value: me.motherName ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr('Date of Birth', 'जन्म तिथि'),
-                              value: me.dobFormatted ?? '—',),
+                            label: tr('Date of Birth', 'जन्म तिथि'),
+                            value: me.dobFormatted ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr('Blood Group', 'ब्लड ग्रुप'),
-                              value: me.bloodGroup ?? '—',),
+                            label: tr('Blood Group', 'ब्लड ग्रुप'),
+                            value: me.bloodGroup ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr('Admission No.', 'प्रवेश संख्या'),
-                              value: me.admissionNumber ?? '—',),
+                            label: tr('Admission No.', 'प्रवेश संख्या'),
+                            value: me.admissionNumber ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr('Address', 'पता'),
-                              value: me.address ??
-                                  me.settingsMapValue('addressSelf') ??
-                                  '—',),
+                            label: tr('Address', 'पता'),
+                            value: me.address ??
+                                me.settingsMapValue('addressSelf') ??
+                                '—',
+                          ),
                           _InfoLine(
-                              label: tr('Email', 'ईमेल'),
-                              value: me.contactEmail ?? '—',),
+                            label: tr('Email', 'ईमेल'),
+                            value: me.contactEmail ?? '—',
+                          ),
                           _InfoLine(
-                              label: tr('Parent Phone', 'अभिभावक फोन'),
-                              value: me.phone ??
-                                  me.settingsMapValue('parentPhoneSelf') ??
-                                  '—',),
+                            label: tr('Parent Phone', 'अभिभावक फोन'),
+                            value: me.phone ??
+                                me.settingsMapValue('parentPhoneSelf') ??
+                                '—',
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             tr(
@@ -277,10 +298,10 @@ class StudentProfileScreen extends ConsumerWidget {
                     // ── Documents — HAMESHA dikhta hai; har doc ka
                     //    Submitted/Pending status ──
                     NmbCard(
-                      color: me.pendingDocuments.isEmpty &&
-                              me.documents.isNotEmpty
-                          ? NmbColors.successSoft
-                          : NmbColors.warningSoft,
+                      color:
+                          me.pendingDocuments.isEmpty && me.documents.isNotEmpty
+                              ? NmbColors.successSoft
+                              : NmbColors.warningSoft,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -322,8 +343,7 @@ class StudentProfileScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child:
-                                        Text(d, style: NmbTypography.body),
+                                    child: Text(d, style: NmbTypography.body),
                                   ),
                                   Text(
                                     (me.documents[d] ?? false)
@@ -355,27 +375,65 @@ class StudentProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 14),
 
+                    if (remarks.isNotEmpty) ...<Widget>[
+                      NmbCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Teacher remarks',
+                              style: NmbTypography.sectionTitle,
+                            ),
+                            const SizedBox(height: 8),
+                            for (final Map<String, dynamic> remark
+                                in remarks.take(8))
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Icon(
+                                      Icons.star_rounded,
+                                      color: NmbColors.accentDark,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '${remark['category']}: ${remark['text']}',
+                                        style: NmbTypography.body,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
                     // ── Fees ──
                     if (me.feeTotal > 0) ...<Widget>[
                       NmbCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(tr('School Fees', 'स्कूल फीस'),
-                                style: NmbTypography.sectionTitle,),
+                            Text(
+                              tr('School Fees', 'स्कूल फीस'),
+                              style: NmbTypography.sectionTitle,
+                            ),
                             const SizedBox(height: 12),
                             // Progress bar: kitna paid
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
                                 value: me.feeTotal > 0
-                                    ? (me.feePaid / me.feeTotal)
-                                        .clamp(0.0, 1.0)
+                                    ? (me.feePaid / me.feeTotal).clamp(0.0, 1.0)
                                     : 0,
                                 minHeight: 10,
                                 backgroundColor: NmbColors.divider,
-                                valueColor:
-                                    const AlwaysStoppedAnimation<Color>(
+                                valueColor: const AlwaysStoppedAnimation<Color>(
                                   NmbColors.success,
                                 ),
                               ),
@@ -420,29 +478,34 @@ class StudentProfileScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            if (me.feeDueDate != null && me.feeDue > 0) ...<Widget>[
+                            if (me.feeDueDate != null &&
+                                me.feeDue > 0) ...<Widget>[
                               const SizedBox(height: 8),
-                              Text('Due date: ${me.feeDueDate}',
-                                  style: NmbTypography.caption.copyWith(
-                                      color: NmbColors.warning,),),
+                              Text(
+                                'Due date: ${me.feeDueDate}',
+                                style: NmbTypography.caption.copyWith(
+                                  color: NmbColors.warning,
+                                ),
+                              ),
                             ],
                             // FEES 2.0: Payment history (PhonePe style)
-                            if ((me.fees?['history'] as List?)
-                                    ?.isNotEmpty ??
+                            if ((me.fees?['history'] as List?)?.isNotEmpty ??
                                 false) ...<Widget>[
                               const SizedBox(height: 10),
                               const Divider(),
-                              Text('Payment History',
-                                  style: NmbTypography.caption.copyWith(
-                                      fontWeight: FontWeight.w800,),),
+                              Text(
+                                'Payment History',
+                                style: NmbTypography.caption.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                               const SizedBox(height: 6),
-                              for (final dynamic h in ((me.fees!['history']
-                                          as List?) ??
-                                      <dynamic>[])
-                                  .take(5))
+                              for (final dynamic h
+                                  in ((me.fees!['history'] as List?) ??
+                                          <dynamic>[])
+                                      .take(5))
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.only(bottom: 6),
                                   child: Row(
                                     children: <Widget>[
                                       const Icon(
@@ -454,8 +517,7 @@ class StudentProfileScreen extends ConsumerWidget {
                                       Expanded(
                                         child: Text(
                                           'Rs. ${((h as Map)['amount'] as num?)?.toStringAsFixed(0) ?? '?'}',
-                                          style: NmbTypography.body
-                                              .copyWith(
+                                          style: NmbTypography.body.copyWith(
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
@@ -463,10 +525,9 @@ class StudentProfileScreen extends ConsumerWidget {
                                       Text(
                                         h['at'] != null
                                             ? DateTime
-                                                    .fromMillisecondsSinceEpoch(
-                                                        h['at'] as int,)
-                                                .toString()
-                                                .substring(0, 10)
+                                                .fromMillisecondsSinceEpoch(
+                                                h['at'] as int,
+                                              ).toString().substring(0, 10)
                                             : '',
                                         style: NmbTypography.caption,
                                       ),
@@ -475,24 +536,27 @@ class StudentProfileScreen extends ConsumerWidget {
                                 ),
                             ],
                             if (me.feeDue > 0 &&
-                                (school?['upiId'] as String?) != null) ...<Widget>[
+                                (school?['upiId'] as String?) !=
+                                    null) ...<Widget>[
                               const SizedBox(height: 12),
                               FilledButton.icon(
                                 style: FilledButton.styleFrom(
-                                    backgroundColor: NmbColors.success,),
+                                  backgroundColor: NmbColors.success,
+                                ),
                                 onPressed: () => _payViaUpi(
                                   context,
                                   upiId: school!['upiId'] as String,
                                   schoolName:
-                                      (school['name'] as String?) ??
-                                          'School',
+                                      (school['name'] as String?) ?? 'School',
                                   amount: me.feeDue,
                                   student: me,
                                 ),
                                 icon: const Icon(
-                                    Icons.currency_rupee_rounded,),
+                                  Icons.currency_rupee_rounded,
+                                ),
                                 label: Text(
-                                    'Pay Rs. ${me.feeDue.toStringAsFixed(0)} via UPI',),
+                                  'Pay Rs. ${me.feeDue.toStringAsFixed(0)} via UPI',
+                                ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
@@ -513,8 +577,10 @@ class StudentProfileScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(tr('Contact School', 'स्कूल से संपर्क'),
-                              style: NmbTypography.sectionTitle,),
+                          Text(
+                            tr('Contact School', 'स्कूल से संपर्क'),
+                            style: NmbTypography.sectionTitle,
+                          ),
                           const SizedBox(height: 10),
                           _ContactRow(
                             icon: Icons.school_rounded,
@@ -544,27 +610,31 @@ class StudentProfileScreen extends ConsumerWidget {
                     // ── Actions ──
                     NmbCard(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 4,),
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
                       child: Column(
                         children: <Widget>[
                           ListTile(
                             contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.settings_outlined,
-                                color: NmbColors.textSecondary,),
+                            leading: const Icon(
+                              Icons.settings_outlined,
+                              color: NmbColors.textSecondary,
+                            ),
                             title: Text(tr('Settings', 'सेटिंग्स')),
-                            trailing:
-                                const Icon(Icons.chevron_right_rounded),
+                            trailing: const Icon(Icons.chevron_right_rounded),
                             onTap: () =>
                                 context.go('/student/profile/settings'),
                           ),
                           const Divider(height: 1),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.info_outline_rounded,
-                                color: NmbColors.textSecondary,),
+                            leading: const Icon(
+                              Icons.info_outline_rounded,
+                              color: NmbColors.textSecondary,
+                            ),
                             title: Text(tr('About App', 'ऐप के बारे में')),
-                            trailing:
-                                const Icon(Icons.chevron_right_rounded),
+                            trailing: const Icon(Icons.chevron_right_rounded),
                             // LICENSE-FREE about (no license page)
                             onTap: () => showDialog<void>(
                               context: context,
@@ -577,8 +647,7 @@ class StudentProfileScreen extends ConsumerWidget {
                                 ),
                                 actions: <Widget>[
                                   TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(),
+                                    onPressed: () => Navigator.of(ctx).pop(),
                                     child: const Text('OK'),
                                   ),
                                 ],
@@ -619,24 +688,31 @@ Future<void> _payViaUpi(
   required AppUser student,
 }) async {
   final String note = Uri.encodeComponent(
-      'Fees ${student.fullName} ${student.classSection ?? ''}',);
+    'Fees ${student.fullName} ${student.classSection ?? ''}',
+  );
   final Uri uri = Uri.parse(
     'upi://pay?pa=$upiId&pn=${Uri.encodeComponent(schoolName)}'
     '&am=${amount.toStringAsFixed(2)}&cu=INR&tn=$note',
   );
   try {
-    final bool ok = await launchUrl(uri,
-        mode: LaunchMode.externalApplication,);
+    final bool ok = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
     if (!ok && context.mounted) {
-      showNmbSnack(context,
-          'No UPI app found. Please pay at the school office.',
-          isError: true,);
+      showNmbSnack(
+        context,
+        'No UPI app found. Please pay at the school office.',
+        isError: true,
+      );
     }
   } catch (_) {
     if (context.mounted) {
-      showNmbSnack(context,
-          'Could not open UPI app. Please pay at the school office.',
-          isError: true,);
+      showNmbSnack(
+        context,
+        'Could not open UPI app. Please pay at the school office.',
+        isError: true,
+      );
     }
   }
 }
@@ -659,9 +735,10 @@ class _InfoLine extends StatelessWidget {
             child: Text(label, style: NmbTypography.caption),
           ),
           Expanded(
-            child: Text(value,
-                style: NmbTypography.body
-                    .copyWith(fontWeight: FontWeight.w600),),
+            child: Text(
+              value,
+              style: NmbTypography.body.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -690,8 +767,10 @@ class _FeeBox extends StatelessWidget {
       ),
       child: Column(
         children: <Widget>[
-          Text('Rs. ${value.toStringAsFixed(0)}',
-              style: NmbTypography.cardTitle.copyWith(color: color),),
+          Text(
+            'Rs. ${value.toStringAsFixed(0)}',
+            style: NmbTypography.cardTitle.copyWith(color: color),
+          ),
           Text(label, style: NmbTypography.caption),
         ],
       ),
@@ -725,8 +804,10 @@ class _AttendanceCard extends ConsumerWidget {
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  Icon(Icons.fact_check_rounded,
-                      color: NmbColors.primary,),
+                  Icon(
+                    Icons.fact_check_rounded,
+                    color: NmbColors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -734,11 +815,13 @@ class _AttendanceCard extends ConsumerWidget {
                       style: NmbTypography.sectionTitle,
                     ),
                   ),
-                  Text(tr('Calendar →', 'कैलेंडर →'),
-                      style: NmbTypography.caption.copyWith(
-                        color: NmbColors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),),
+                  Text(
+                    tr('Calendar →', 'कैलेंडर →'),
+                    style: NmbTypography.caption.copyWith(
+                      color: NmbColors.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -753,13 +836,21 @@ class _AttendanceCard extends ConsumerWidget {
                 Row(
                   children: <Widget>[
                     Expanded(
-                      child: _attStat('Present', '$present',
-                          NmbColors.success, NmbColors.successSoft,),
+                      child: _attStat(
+                        'Present',
+                        '$present',
+                        NmbColors.success,
+                        NmbColors.successSoft,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _attStat('Absent', '$absent',
-                          NmbColors.danger, NmbColors.dangerSoft,),
+                      child: _attStat(
+                        'Absent',
+                        '$absent',
+                        NmbColors.danger,
+                        NmbColors.dangerSoft,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -803,8 +894,10 @@ class _AttendanceCard extends ConsumerWidget {
       ),
       child: Column(
         children: <Widget>[
-          Text(value,
-              style: NmbTypography.cardTitle.copyWith(color: fg),),
+          Text(
+            value,
+            style: NmbTypography.cardTitle.copyWith(color: fg),
+          ),
           Text(label, style: NmbTypography.caption),
         ],
       ),

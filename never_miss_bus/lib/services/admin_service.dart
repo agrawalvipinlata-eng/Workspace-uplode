@@ -76,10 +76,12 @@ class AdminService {
           );
         } on FirebaseAuthException {
           return const Err<String>(
-            AppFailure('email-in-use',
-                'This email/ID was used before with a different password. '
-                'Use a different roll number, or contact support to free '
-                'this ID.',),
+            AppFailure(
+              'email-in-use',
+              'This email/ID was used before with a different password. '
+                  'Use a different roll number, or contact support to free '
+                  'this ID.',
+            ),
           );
         }
         final String candidateUid = cred.user!.uid;
@@ -125,12 +127,20 @@ class AdminService {
       // Profile ban gaya = account ready; baaki 1-2 sec me khud ho jayega.
       () async {
         try {
-          await _writeAccessMirror(uid,
-              role: role, busId: busId, active: true,);
+          await _writeAccessMirror(
+            uid,
+            role: role,
+            busId: busId,
+            active: true,
+          );
         } catch (_) {/* retry on next assign */}
         try {
-          await _audit('USER_PROVISIONED', 'user', uid,
-              <String, dynamic>{'role': role, 'busId': busId},);
+          await _audit(
+            'USER_PROVISIONED',
+            'user',
+            uid,
+            <String, dynamic>{'role': role, 'busId': busId},
+          );
         } catch (_) {/* audit best-effort */}
       }();
       return Ok<String>(uid);
@@ -175,13 +185,19 @@ class AdminService {
         busId: busId,
         active: (doc.data()?['isActive'] as bool?) ?? true,
       );
-      await _audit('STUDENT_BUS_REASSIGNED', 'user', uid,
-          <String, dynamic>{'busId': busId, 'stopId': stopId},);
+      await _audit(
+        'STUDENT_BUS_REASSIGNED',
+        'user',
+        uid,
+        <String, dynamic>{'busId': busId, 'stopId': stopId},
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     }
   }
 
@@ -203,25 +219,36 @@ class AdminService {
         }
       }
       if (busId != null) {
-        batch.update(_db.collection('buses').doc(busId),
-            <String, dynamic>{'driverId': driverUid},);
+        batch.update(
+          _db.collection('buses').doc(busId),
+          <String, dynamic>{'driverId': driverUid},
+        );
       }
-      batch.update(_db.collection('users').doc(driverUid),
-          <String, dynamic>{
-            'busId': busId,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+      batch.update(_db.collection('users').doc(driverUid), <String, dynamic>{
+        'busId': busId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       await batch.commit();
 
-      await _writeAccessMirror(driverUid,
-          role: 'driver', busId: busId, active: true,);
-      await _audit('DRIVER_BUS_REASSIGNED', 'user', driverUid,
-          <String, dynamic>{'busId': busId},);
+      await _writeAccessMirror(
+        driverUid,
+        role: 'driver',
+        busId: busId,
+        active: true,
+      );
+      await _audit(
+        'DRIVER_BUS_REASSIGNED',
+        'user',
+        driverUid,
+        <String, dynamic>{'busId': busId},
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     }
   }
 
@@ -243,9 +270,65 @@ class AdminService {
       }();
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
+    }
+  }
+
+  Future<Result<void>> promoteStudent({
+    required String uid,
+    required String classSection,
+    required String rollNumber,
+    required List<String> removeDocuments,
+  }) async {
+    if (classSection.trim().isEmpty || rollNumber.trim().isEmpty) {
+      return const Err<void>(AppFailure(
+        'invalid-promotion',
+        'Class, section and roll number are required.',
+      ));
+    }
+    try {
+      final DocumentReference<Map<String, dynamic>> ref =
+          _db.collection('users').doc(uid);
+      await _db.runTransaction((Transaction tx) async {
+        final DocumentSnapshot<Map<String, dynamic>> snap = await tx.get(ref);
+        final Map<String, dynamic> data = snap.data() ?? <String, dynamic>{};
+        final List<dynamic> history =
+            (data['promotionHistory'] as List?)?.toList() ?? <dynamic>[];
+        history.insert(0, <String, dynamic>{
+          'fromClass': data['classSection'],
+          'fromRoll': data['rollNumber'],
+          'toClass': classSection.trim(),
+          'toRoll': rollNumber.trim(),
+          'at': DateTime.now().millisecondsSinceEpoch,
+        });
+        final Map<String, dynamic> docs =
+            ((data['documents'] as Map?) ?? <String, dynamic>{})
+                .cast<String, dynamic>();
+        for (final String name in removeDocuments) {
+          docs.remove(name);
+        }
+        tx.update(ref, <String, dynamic>{
+          'classSection': classSection.trim(),
+          'rollNumber': rollNumber.trim(),
+          'documents': docs,
+          'promotionHistory': history.take(20).toList(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      });
+      await _audit('STUDENT_PROMOTED', 'user', uid, <String, dynamic>{
+        'classSection': classSection,
+        'rollNumber': rollNumber,
+        'removedDocuments': removeDocuments,
+      });
+      return const Ok<void>(null);
+    } on FirebaseException catch (e) {
       return Err<void>(e.code == 'permission-denied'
           ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+          : AppFailure.unknown);
     }
   }
 
@@ -304,8 +387,10 @@ class AdminService {
       }
       if (newUid == null || newEmail == null) {
         return const Err<void>(
-          AppFailure('resets-exhausted',
-              'Too many resets. Please handle via the school office.',),
+          AppFailure(
+            'resets-exhausted',
+            'Too many resets. Please handle via the school office.',
+          ),
         );
       }
 
@@ -337,21 +422,36 @@ class AdminService {
       };
       profile.remove('replacedBy');
       await _db.collection('users').doc(newUid).set(profile);
-      await _writeAccessMirror(newUid,
-          role: 'student', busId: student.busId, active: true,);
+      await _writeAccessMirror(
+        newUid,
+        role: 'student',
+        busId: student.busId,
+        active: true,
+      );
 
       await _db.collection('users').doc(student.uid).update(
-          <String, dynamic>{'isActive': false, 'replacedBy': newUid},);
-      await _writeAccessMirror(student.uid,
-          role: 'student', busId: student.busId, active: false,);
+        <String, dynamic>{'isActive': false, 'replacedBy': newUid},
+      );
+      await _writeAccessMirror(
+        student.uid,
+        role: 'student',
+        busId: student.busId,
+        active: false,
+      );
 
-      await _audit('STUDENT_PASSWORD_RESET', 'user', student.uid,
-          <String, dynamic>{'newUid': newUid},);
+      await _audit(
+        'STUDENT_PASSWORD_RESET',
+        'user',
+        student.uid,
+        <String, dynamic>{'newUid': newUid},
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     } catch (_) {
       return const Err<void>(AppFailure.unknown);
     } finally {
@@ -373,19 +473,16 @@ class AdminService {
       final DocumentReference<Map<String, dynamic>> ref =
           _db.collection('users').doc(uid);
       await _db.runTransaction((Transaction tx) async {
-        final DocumentSnapshot<Map<String, dynamic>> doc =
-            await tx.get(ref);
+        final DocumentSnapshot<Map<String, dynamic>> doc = await tx.get(ref);
         final Map<String, dynamic> fees =
             ((doc.data()?['fees'] as Map?) ?? <String, dynamic>{})
                 .cast<String, dynamic>();
-        final double paid =
-            ((fees['paid'] as num?) ?? 0).toDouble() + amount;
+        final double paid = ((fees['paid'] as num?) ?? 0).toDouble() + amount;
         final double total = ((fees['total'] as num?) ?? 0).toDouble();
         if (total > 0 && paid > total) {
           throw StateError('Payment cannot be greater than total fees.');
         }
-        final List<dynamic> history =
-            (fees['history'] as List?) ?? <dynamic>[];
+        final List<dynamic> history = (fees['history'] as List?) ?? <dynamic>[];
         history.insert(0, <String, dynamic>{
           'amount': amount,
           'at': DateTime.now().millisecondsSinceEpoch,
@@ -399,13 +496,19 @@ class AdminService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }).timeout(const Duration(seconds: 12));
-      await _audit('FEE_PAYMENT_RECORDED', 'user', uid,
-          <String, dynamic>{'amount': amount},);
+      await _audit(
+        'FEE_PAYMENT_RECORDED',
+        'user',
+        uid,
+        <String, dynamic>{'amount': amount},
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     } catch (e) {
       return Err<void>(AppFailure('fee-rec', 'Failed: $e'));
     }
@@ -431,9 +534,11 @@ class AdminService {
       await _audit('FORCE_LOGOUT', 'user', uid, const <String, dynamic>{});
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     }
   }
 
@@ -445,13 +550,17 @@ class AdminService {
     // fail ho toh bhi aage badho — aur PURA operation 30s timeout me
     // guaranteed khatam hota hai (UI kabhi gray hokar nahi atkegi).
     try {
-      return await _deleteUserInner(user)
-          .timeout(const Duration(seconds: 30), onTimeout: () {
-        return const Err<void>(
-          AppFailure('timeout',
-              'Delete is taking too long. Check internet and try again.',),
-        );
-      },);
+      return await _deleteUserInner(user).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          return const Err<void>(
+            AppFailure(
+              'timeout',
+              'Delete is taking too long. Check internet and try again.',
+            ),
+          );
+        },
+      );
     } catch (e) {
       return Err<void>(AppFailure('delete-failed', 'Delete failed: $e'));
     }
@@ -536,8 +645,12 @@ class AdminService {
 
       // Audit
       try {
-        await _audit('USER_DELETED_PERMANENTLY', 'user', user.uid,
-            <String, dynamic>{'name': user.fullName, 'role': user.role.name},);
+        await _audit(
+          'USER_DELETED_PERMANENTLY',
+          'user',
+          user.uid,
+          <String, dynamic>{'name': user.fullName, 'role': user.role.name},
+        );
       } catch (_) {}
     }();
   }
@@ -559,13 +672,19 @@ class AdminService {
         busId: doc.data()?['busId'] as String?,
         active: active,
       );
-      await _audit(active ? 'ACCOUNT_ENABLED' : 'ACCOUNT_DISABLED',
-          'user', uid, const <String, dynamic>{},);
+      await _audit(
+        active ? 'ACCOUNT_ENABLED' : 'ACCOUNT_DISABLED',
+        'user',
+        uid,
+        const <String, dynamic>{},
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     }
   }
 
@@ -601,8 +720,7 @@ class AdminService {
       // Firestore batches max 500 ops.
       WriteBatch batch = _db.batch();
       int ops = 0;
-      for (final QueryDocumentSnapshot<Map<String, dynamic>> u
-          in users.docs) {
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> u in users.docs) {
         final DocumentReference<Map<String, dynamic>> ref =
             u.reference.collection('inbox').doc();
         batch.set(ref, <String, dynamic>{
@@ -621,17 +739,23 @@ class AdminService {
       }
       if (ops > 0) await batch.commit();
 
-      await _audit('ANNOUNCEMENT_SENT', 'notification', scope,
-          <String, dynamic>{
-            'title': title,
-            'busId': busId,
-            'classSection': classSection,
-          },);
+      await _audit(
+        'ANNOUNCEMENT_SENT',
+        'notification',
+        scope,
+        <String, dynamic>{
+          'title': title,
+          'busId': busId,
+          'classSection': classSection,
+        },
+      );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
-      return Err<void>(e.code == 'permission-denied'
-          ? AppFailure.permissionDenied
-          : AppFailure.unknown,);
+      return Err<void>(
+        e.code == 'permission-denied'
+            ? AppFailure.permissionDenied
+            : AppFailure.unknown,
+      );
     }
   }
 
@@ -653,8 +777,12 @@ class AdminService {
     }
   }
 
-  Future<void> _audit(String action, String targetType, String targetId,
-      Map<String, dynamic> details,) async {
+  Future<void> _audit(
+    String action,
+    String targetType,
+    String targetId,
+    Map<String, dynamic> details,
+  ) async {
     try {
       await _db.collection('auditLogs').add(<String, dynamic>{
         'actorUid': FirebaseAuth.instance.currentUser?.uid ?? '',

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/nmb_colors.dart';
 import '../../../core/theme/nmb_typography.dart';
+import '../../../core/constants/nmb_constants.dart';
 import '../../../core/widgets/nmb_card.dart';
+import '../../../core/widgets/nmb_dialogs.dart';
 import '../../../core/widgets/responsive_scaffold_body.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/state_views.dart';
@@ -28,6 +30,44 @@ class AdminStudentsScreen extends ConsumerStatefulWidget {
 class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
   String _query = '';
   String? _classFilter; // null = All classes
+  String? _lookupClass;
+  String? _lookupSection;
+  final TextEditingController _lookupRoll = TextEditingController();
+
+  @override
+  void dispose() {
+    _lookupRoll.dispose();
+    super.dispose();
+  }
+
+  void _lookup(List<AppUser> students) {
+    final String? klass = _lookupClass;
+    final String? section = _lookupSection;
+    final String roll = _lookupRoll.text.trim();
+    if (klass == null || section == null || roll.isEmpty) {
+      showNmbSnack(
+        context,
+        'Select class, section and enter roll number.',
+        isError: true,
+      );
+      return;
+    }
+    final String classSection = SchoolClasses.label(klass, section);
+    final List<AppUser> matches = students
+        .where((AppUser s) =>
+            s.classSection == classSection && s.rollNumber == roll)
+        .toList();
+    final AppUser? match = matches.isEmpty ? null : matches.first;
+    if (match == null) {
+      showNmbSnack(
+        context,
+        'No student found for $classSection / Roll $roll',
+        isError: true,
+      );
+      return;
+    }
+    StudentDetailsSheet.show(context, match);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,14 +113,15 @@ class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
             final bool matchesClass =
                 _classFilter == null || s.classSection == _classFilter;
             final String q = _query.trim().toLowerCase();
-            final bool matchesQuery = q.isEmpty || <String>[
-              s.fullName,
-              s.classSection ?? '',
-              s.rollNumber ?? '',
-              s.phone ?? '',
-              s.email,
-              s.contactEmail ?? '',
-            ].any((String value) => value.toLowerCase().contains(q));
+            final bool matchesQuery = q.isEmpty ||
+                <String>[
+                  s.fullName,
+                  s.classSection ?? '',
+                  s.rollNumber ?? '',
+                  s.phone ?? '',
+                  s.email,
+                  s.contactEmail ?? '',
+                ].any((String value) => value.toLowerCase().contains(q));
             return matchesClass && matchesQuery;
           }).toList();
 
@@ -88,6 +129,68 @@ class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
+                NmbCard(
+                  color: NmbColors.primarySoft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const Text(
+                        'Find student by Class • Section • Roll',
+                        style: NmbTypography.sectionTitle,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _lookupClass,
+                              decoration:
+                                  const InputDecoration(labelText: 'Class'),
+                              items: <DropdownMenuItem<String>>[
+                                for (final String c in SchoolClasses.classes)
+                                  DropdownMenuItem<String>(
+                                      value: c, child: Text(c)),
+                              ],
+                              onChanged: (String? v) =>
+                                  setState(() => _lookupClass = v),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _lookupSection,
+                              decoration:
+                                  const InputDecoration(labelText: 'Section'),
+                              items: <DropdownMenuItem<String>>[
+                                for (final String s in SchoolClasses.sections)
+                                  DropdownMenuItem<String>(
+                                      value: s, child: Text(s)),
+                              ],
+                              onChanged: (String? v) =>
+                                  setState(() => _lookupSection = v),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _lookupRoll,
+                              keyboardType: TextInputType.number,
+                              decoration:
+                                  const InputDecoration(labelText: 'Roll no.'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      FilledButton.icon(
+                        onPressed: () => _lookup(studentsIn),
+                        icon: const Icon(Icons.person_search_rounded),
+                        label: const Text('Show student details'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
                 TextField(
                   decoration: const InputDecoration(
                     hintText: 'Search name, class, roll, phone or email…',
@@ -135,8 +238,7 @@ class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
                     child: EmptyState(
                       icon: Icons.school_outlined,
                       title: 'No students found',
-                      message:
-                          'Add students with the button below, or adjust '
+                      message: 'Add students with the button below, or adjust '
                           'your search.',
                     ),
                   )
@@ -217,12 +319,16 @@ class _StudentTile extends StatelessWidget {
           IconButton(
             tooltip: 'Details, documents & fees',
             visualDensity: VisualDensity.compact,
-            icon: Icon(Icons.assignment_ind_outlined,
-                color: NmbColors.primary,),
+            icon: Icon(
+              Icons.assignment_ind_outlined,
+              color: NmbColors.primary,
+            ),
             onPressed: () => StudentDetailsSheet.show(context, student),
           ),
-          const Icon(Icons.chevron_right_rounded,
-              color: NmbColors.textTertiary,),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: NmbColors.textTertiary,
+          ),
         ],
       ),
     );

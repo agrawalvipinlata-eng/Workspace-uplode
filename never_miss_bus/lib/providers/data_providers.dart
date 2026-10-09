@@ -172,6 +172,16 @@ final StreamProvider<List<AppUser>> allStudentsProvider =
   },
 );
 
+final StreamProvider<List<Map<String, dynamic>>> myRemarksProvider =
+    StreamProvider<List<Map<String, dynamic>>>((Ref ref) {
+  final String? uid = ref.watch(currentSessionProvider)?.uid;
+  if (uid == null) return Stream<List<Map<String, dynamic>>>.value(const []);
+  return _quiet(
+    ref.watch(remarkServiceProvider).watchForStudent(uid),
+    const <Map<String, dynamic>>[],
+  );
+});
+
 final StreamProvider<List<AppUser>> allTeachersProvider =
     StreamProvider<List<AppUser>>(
   (Ref ref) => _quiet(
