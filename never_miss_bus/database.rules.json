@@ -1,0 +1,24 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "access": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('access').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (root.child('access').child(auth.uid).child('role').val() === 'admin' || root.child('access').child(auth.uid).child('role').val() === 'teacher') && root.child('access').child(auth.uid).child('active').val() === true",
+        ".validate": "newData.hasChildren(['role','active']) && (newData.child('role').val() === 'student' || newData.child('role').val() === 'driver' || newData.child('role').val() === 'admin')"
+      }
+    },
+
+    "liveLocations": {
+      "$busId": {
+        ".read": "auth != null && root.child('access').child(auth.uid).child('active').val() === true && (root.child('access').child(auth.uid).child('role').val() === 'admin' || root.child('access').child(auth.uid).child('busId').val() === $busId)",
+
+        ".write": "auth != null && root.child('access').child(auth.uid).child('active').val() === true && root.child('access').child(auth.uid).child('role').val() === 'driver' && root.child('access').child(auth.uid).child('busId').val() === $busId",
+
+        ".validate": "!newData.exists() || (newData.hasChildren(['lat','lng','tripId','updatedAt']) && newData.child('lat').isNumber() && newData.child('lat').val() >= -90 && newData.child('lat').val() <= 90 && newData.child('lng').isNumber() && newData.child('lng').val() >= -180 && newData.child('lng').val() <= 180 && newData.child('tripId').isString() && newData.child('updatedAt').val() === now)"
+      }
+    }
+  }
+}

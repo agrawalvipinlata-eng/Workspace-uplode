@@ -1,0 +1,57 @@
+name: never_miss_bus
+description: "Never Miss Bus — secure school bus live tracking for SRBS International School."
+publish_to: "none"
+version: 1.0.0+28
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.2.7
+
+  # Firebase (current stable, official FlutterFire)
+  # Firebase — sab FREE (Spark) plan pe chalta hai; koi card nahi chahiye.
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_database: ^11.1.4
+  firebase_messaging: ^15.1.3
+
+  # Maps & location — flutter_map uses OpenStreetMap: 100% free,
+  # NO API key, NO billing/card required.
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.1
+
+  # Platform / UX
+  permission_handler: ^11.3.1
+  connectivity_plus: ^6.0.5
+  flutter_local_notifications: ^17.2.3
+  shared_preferences: ^2.3.2
+  device_info_plus: ^10.1.2
+  image_picker: ^1.1.2
+  url_launcher: ^6.3.0
+  intl: ^0.19.0
+  cupertino_icons: ^1.0.8
+
+# Pins for Flutter 3.24.x compatibility: newer geolocator_android builds
+# require the Gradle plugin loader introduced in Flutter 3.27.
+dependency_overrides:
+  geolocator_android: 4.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

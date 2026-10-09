@@ -1,0 +1,209 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════
+// NEVER MISS BUS — Firestore security rules (FREE / SPARK-PLAN MODE)
+//
+// No Cloud Functions needed. Authorization source of truth:
+// the CALLER's own `users/{uid}` document (role, busId, isActive),
+// which is read server-side via get() on every request. Clients cannot
+// edit their own role/assignment fields (enforced below), so a modified
+// app still cannot widen its own access.
+// ═══════════════════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function signedIn() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && me().isActive == true;
+    }
+    function isAdmin()   { return signedIn() && me().role == 'admin'; }
+    function isTeacher() { return signedIn() && me().role == 'teacher'; }
+    // Teachers can manage students (add/edit) but not drivers/admins.
+    function isStaff()   { return isAdmin() || isTeacher(); }
+    function isDriver()  { return signedIn() && me().role == 'driver'; }
+    function isStudent() { return signedIn() && me().role == 'student'; }
+    function myBusId()   { return me().busId; }
+
+    // ── users ────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Owner reads own doc (needed for session bootstrap even when
+      // isActive=false, so the app can show "account disabled").
+      allow read: if request.auth != null
+        && (request.auth.uid == uid || isStaff());
+
+      // Owner self-writes limited to harmless fields — NEVER role/bus/
+      // stop/isActive. Those are admin-only.
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['fcmTokens', 'settings', 'lastSeenAt']);
+
+      // Admin creates profiles (paired with Auth signup via secondary
+      // app) and manages assignment/enable fields. Role/self protections:
+      // an admin cannot edit their own role or disable themselves.
+      allow create: if (
+          (isAdmin()
+            && request.resource.data.role in
+                ['student', 'driver', 'teacher', 'admin'])
+          || (isTeacher() && request.resource.data.role == 'student')
+        )
+        && request.resource.data.fullName is string
+        && request.resource.data.email is string
+        && request.resource.data.isActive == true;
+
+      allow update: if (isAdmin()
+          && (uid != request.auth.uid
+              || (request.resource.data.role == resource.data.role
+                  && request.resource.data.isActive == true)))
+        || (isTeacher()
+            && resource.data.role == 'student'
+            && request.resource.data.role == 'student');
+
+      allow delete: if isAdmin(); // permanent delete by admin
+
+      // Private notification inbox.
+      match /inbox/{notifId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        // Owner may only mark as read.
+        allow update: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['read']);
+        // Admin fan-out writes announcements into each inbox.
+        allow create: if isAdmin()
+          && request.resource.data.title is string
+          && request.resource.data.body is string;
+        allow delete: if isAdmin(); // cleanup during permanent delete
+      }
+    }
+
+    // ── buses ────────────────────────────────────────────────────────
+    match /buses/{busId} {
+      allow read: if isStaff()
+        || ((isStudent() || isDriver()) && myBusId() == busId);
+      allow create, update: if isAdmin()
+        && request.resource.data.busNumber is string
+        && request.resource.data.plateNumber is string;
+      allow delete: if isAdmin();
+    }
+
+    // ── routes ───────────────────────────────────────────────────────
+    match /routes/{routeId} {
+      allow read: if isAdmin()
+        || ((isStudent() || isDriver())
+            && resource.data.busId == myBusId());
+      allow create, update: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.busId is string;
+      // ROUTE RECORDING: driver apni bus ke route ka sirf recordedPath
+      // update kar sakta hai (pehli trip ka GPS trace).
+      allow update: if isDriver()
+        && resource.data.busId == myBusId()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['recordedPath']);
+      allow create: if isDriver()
+        && request.resource.data.busId == myBusId()
+        && request.resource.data.isActive == true;
+      allow delete: if isAdmin();
+    }
+
+    // ── stops ────────────────────────────────────────────────────────
+    match /stops/{stopId} {
+      allow read: if isStaff()
+        || ((isStudent() || isDriver())
+            && resource.data.busId == myBusId());
+      allow create, update: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.location.lat is number
+        && request.resource.data.location.lng is number
+        && request.resource.data.location.lat >= -90.0
+        && request.resource.data.location.lat <= 90.0
+        && request.resource.data.location.lng >= -180.0
+        && request.resource.data.location.lng <= 180.0;
+      allow delete: if isAdmin();
+    }
+
+    // ── trips ────────────────────────────────────────────────────────
+    match /trips/{tripId} {
+      allow read: if isAdmin()
+        || (isDriver() && resource.data.driverId == request.auth.uid)
+        || (isStudent() && resource.data.busId == myBusId());
+
+      allow create: if isDriver()
+        && request.resource.data.driverId == request.auth.uid
+        && request.resource.data.busId == myBusId()
+        && request.resource.data.status == 'active'
+        && request.resource.data.direction in ['pickup', 'drop'];
+
+      allow update: if isAdmin()
+        || (isDriver()
+            && resource.data.driverId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status', 'endedAt', 'lastKnown', 'stopsReached'])
+            && request.resource.data.status in ['active', 'completed']);
+
+      allow delete: if false;
+    }
+
+    // ── auditLogs — append-only, admin-written, admin-read ───────────
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.actorUid == request.auth.uid;
+      allow update, delete: if false; // tamper-proof: no edits, no deletes
+    }
+
+    // ── config ───────────────────────────────────────────────────────
+    // ── attendance (class-wise; teacher/admin write, student apna padhe) ─
+    match /attendance/{attId} {
+      allow read: if isStaff()
+        || (isStudent()
+            && resource.data.classSection == me().classSection);
+      allow create, update: if isAdmin()
+        || (isTeacher()
+            && request.resource.data.classSection == me().classSection);
+      allow delete: if isAdmin();
+    }
+
+
+    // 📝 LEAVE APPLICATIONS — student bhejta hai, teacher/admin decide
+    match /applications/{appId} {
+      // Student: apni hi application create (status pending hi ho)
+      allow create: if isStudent()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.classSection == me().classSection;
+      // Read: apni khud ki, ya staff (teacher apni class ki)
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.uid == request.auth.uid)
+        || (isTeacher() && resource.data.classSection == me().classSection);
+      // Decide: admin sab, teacher apni class ki — sirf status fields
+      allow update: if (isAdmin()
+          || (isTeacher()
+              && resource.data.classSection == me().classSection))
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'decidedBy', 'decidedAt']);
+      allow delete: if isAdmin();
+    }
+
+
+    // 🧠 ERROR REPORTS — koi bhi logged-in user apni error report bhejta
+    // hai; sirf admin padhta/update/delete karta hai.
+    match /errorReports/{reportId} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /config/school {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

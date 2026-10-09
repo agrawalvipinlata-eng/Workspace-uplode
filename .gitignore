@@ -1,0 +1,13 @@
+
+# Excluded private/generated workspace artifacts
+.admin_token
+.admin_uid
+.android/
+.config/
+.dart-tool/
+.dartServer/
+.flutter
+.gitconfig
+.java/
+.teachers
+.tq.json
