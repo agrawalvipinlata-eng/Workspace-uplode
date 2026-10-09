@@ -325,6 +325,16 @@ class _AppTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text((app['reason'] as String?) ?? '',
               style: NmbTypography.bodySecondary,),
+          if ((app['decisionNote'] as String?)?.isNotEmpty == true) ...<Widget>[
+            const SizedBox(height: 6),
+            Text(
+              'School note: ${app['decisionNote']}',
+              style: NmbTypography.caption.copyWith(
+                color: NmbColors.danger,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           if (created != null) ...<Widget>[
             const SizedBox(height: 4),
             Text(

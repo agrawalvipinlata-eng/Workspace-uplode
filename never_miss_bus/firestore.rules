@@ -203,8 +203,14 @@ service cloud.firestore {
       allow update: if (isAdmin()
           || (isTeacher()
               && resource.data.classSection == me().classSection))
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved', 'rejected']
+        && request.resource.data.decidedBy == request.auth.uid
+        && (request.resource.data.status == 'approved'
+            || (request.resource.data.decisionNote is string
+                && request.resource.data.decisionNote.size() >= 3))
         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'decidedBy', 'decidedAt']);
+            .hasOnly(['status', 'decidedBy', 'decidedAt', 'decisionNote']);
       allow delete: if isAdmin();
     }
 

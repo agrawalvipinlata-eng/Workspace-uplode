@@ -30,6 +30,16 @@ class LeaveService {
     required String reason,
   }) async {
     try {
+      if (await hasPendingOverlap(
+        uid: uid,
+        fromDate: fromDate,
+        toDate: toDate,
+      )) {
+        return const Err<void>(AppFailure(
+          'duplicate-application',
+          'A pending application already covers these dates.',
+        ));
+      }
       await _db.collection('applications').add(<String, dynamic>{
         'uid': uid,
         'name': name,
@@ -53,6 +63,27 @@ class LeaveService {
     } catch (e) {
       return Err<void>(AppFailure('leave-send', 'Send failed: $e'));
     }
+  }
+
+  Future<bool> hasPendingOverlap({
+    required String uid,
+    required DateTime fromDate,
+    required DateTime toDate,
+  }) async {
+    final QuerySnapshot<Map<String, dynamic>> snap = await _db
+        .collection('applications')
+        .where('uid', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .get()
+        .timeout(const Duration(seconds: 10));
+    final DateTime from = DateTime(fromDate.year, fromDate.month, fromDate.day);
+    final DateTime to = DateTime(toDate.year, toDate.month, toDate.day);
+    return snap.docs.any((QueryDocumentSnapshot<Map<String, dynamic>> d) {
+      final DateTime? oldFrom = DateTime.tryParse('${d.data()['fromDate']}');
+      final DateTime? oldTo = DateTime.tryParse('${d.data()['toDate']}');
+      if (oldFrom == null || oldTo == null) return false;
+      return !to.isBefore(oldFrom) && !from.isAfter(oldTo);
+    });
   }
 
   /// Student: meri applications (latest pehle).
@@ -102,6 +133,7 @@ class LeaveService {
     required String applicationId,
     required bool approve,
     required String decidedBy,
+    String? decisionNote,
   }) async {
     try {
       await _db
@@ -111,6 +143,8 @@ class LeaveService {
         'status': approve ? 'approved' : 'rejected',
         'decidedBy': decidedBy,
         'decidedAt': FieldValue.serverTimestamp(),
+        if (decisionNote != null && decisionNote.trim().isNotEmpty)
+          'decisionNote': decisionNote.trim(),
       }).timeout(const Duration(seconds: 10));
       return const Ok<void>(null);
     } catch (e) {

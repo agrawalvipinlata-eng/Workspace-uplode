@@ -206,10 +206,42 @@ class TeacherApplicationsScreen extends ConsumerWidget {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     final AppUser? me = ref.read(myProfileProvider).valueOrNull;
     if (me == null) return;
+    String? decisionNote;
+    if (!approve) {
+      final TextEditingController note = TextEditingController();
+      decisionNote = await showDialog<String>(
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: const Text('Reason for rejection'),
+          content: TextField(
+            controller: note,
+            autofocus: true,
+            maxLines: 3,
+            maxLength: 200,
+            decoration: const InputDecoration(hintText: 'Write a short reason'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (note.text.trim().length < 3) return;
+                Navigator.of(dialogContext).pop(note.text.trim());
+              },
+              child: const Text('Reject'),
+            ),
+          ],
+        ),
+      );
+      if (decisionNote == null) return;
+    }
     final Result<void> r = await ref.read(leaveServiceProvider).decide(
           applicationId: id,
           approve: approve,
           decidedBy: me.uid,
+          decisionNote: decisionNote,
         );
     r.when(
       ok: (_) => messenger.showSnackBar(SnackBar(
