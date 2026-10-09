@@ -69,6 +69,15 @@ class AdminTeachersScreen extends ConsumerWidget {
                                   style: NmbTypography.cardTitle,),
                               Text(t.email,
                                   style: NmbTypography.bodySecondary,),
+                              Text(
+                                <String>[
+                                  if (t.classSection != null)
+                                    'Class ${t.classSection}',
+                                  if (t.phone != null && t.phone!.isNotEmpty)
+                                    t.phone!,
+                                ].join(' • '),
+                                style: NmbTypography.caption,
+                              ),
                             ],
                           ),
                         ),

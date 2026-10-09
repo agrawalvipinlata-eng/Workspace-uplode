@@ -11,6 +11,7 @@ import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_dialogs.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/data_providers.dart';
 
 /// Admin/Teacher sheet: student ke personal details, documents checklist
 /// aur fees — sab ek jagah edit hota hai.
@@ -152,6 +153,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   /// FEES 2.0: payment record — paid amount update + history entry
   /// (PhonePe-style list student ko dikhti hai).
   Future<void> _recordPayment() async {
+    if (ref.read(myProfileProvider).valueOrNull?.role.name == 'teacher') return;
     final TextEditingController amt = TextEditingController();
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     final adminSvc = ref.read(adminServiceProvider);
@@ -206,6 +208,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   }
 
   Future<void> _save() async {
+    if (ref.read(myProfileProvider).valueOrNull?.role.name == 'teacher') return;
     setState(() => _saving = true);
     final double total = double.tryParse(_feeTotal.text.trim()) ?? 0;
     final double paid = double.tryParse(_feePaid.text.trim()) ?? 0;
@@ -257,6 +260,8 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final bool teacherReadOnly =
+        ref.watch(myProfileProvider).valueOrNull?.role.name == 'teacher';
     final int pending =
         _docs.values.where((bool v) => !v).length;
 
@@ -281,7 +286,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                 child: Column(
                   children: <Widget>[
                     GestureDetector(
-                      onTap: _pickPhoto,
+                      onTap: teacherReadOnly ? null : _pickPhoto,
                       child: CircleAvatar(
                         radius: 42,
                         backgroundColor: NmbColors.primarySoft,
@@ -300,7 +305,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                     ),
                     const SizedBox(height: 6),
                     TextButton.icon(
-                      onPressed: _pickPhoto,
+                      onPressed: teacherReadOnly ? null : _pickPhoto,
                       icon: const Icon(Icons.photo_library_rounded,
                           size: 18,),
                       label: Text(widget.student.photoB64 != null ||
@@ -318,14 +323,17 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                   style: NmbTypography.sectionTitle,),
               const SizedBox(height: 10),
               TextField(
+                  readOnly: teacherReadOnly,
                   controller: _father,
                   decoration: _dec("Father's name"),),
               const SizedBox(height: 10),
               TextField(
+                  readOnly: teacherReadOnly,
                   controller: _mother,
                   decoration: _dec("Mother's name"),),
               const SizedBox(height: 10),
               TextField(
+                readOnly: teacherReadOnly,
                 controller: _contactEmail,
                 keyboardType: TextInputType.emailAddress,
                 decoration: _dec('Email (parent/student — optional)'),),
@@ -334,9 +342,9 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                 children: <Widget>[
                   Expanded(
                     child: TextField(
-                      controller: _dob,
                       readOnly: true,
-                      onTap: _pickDob,
+                      controller: _dob,
+                      onTap: teacherReadOnly ? null : _pickDob,
                       decoration: _dec('Date of birth').copyWith(
                         suffixIcon:
                             const Icon(Icons.calendar_month_rounded),
@@ -353,18 +361,21 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                           DropdownMenuItem<String>(
                               value: b, child: Text(b),),
                       ],
-                      onChanged: (String? v) =>
-                          setState(() => _bloodGroup = v),
+                      onChanged: teacherReadOnly
+                          ? null
+                          : (String? v) => setState(() => _bloodGroup = v),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               TextField(
+                  readOnly: teacherReadOnly,
                   controller: _admission,
                   decoration: _dec('Admission number'),),
               const SizedBox(height: 10),
               TextField(
+                readOnly: teacherReadOnly,
                 controller: _address,
                 maxLines: 2,
                 decoration: _dec('Home address'),
@@ -407,8 +418,9 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                     ),
                   ),
                   value: _docs[d],
-                  onChanged: (bool? v) =>
-                      setState(() => _docs[d] = v ?? false),
+                  onChanged: teacherReadOnly
+                      ? null
+                      : (bool? v) => setState(() => _docs[d] = v ?? false),
                 ),
               const SizedBox(height: 12),
 
@@ -419,6 +431,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                 children: <Widget>[
                   Expanded(
                     child: TextField(
+                      readOnly: teacherReadOnly,
                       controller: _feeTotal,
                       keyboardType: TextInputType.number,
                       decoration: _dec('Total fees (Rs.)'),
@@ -427,6 +440,7 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
+                      readOnly: teacherReadOnly,
                       controller: _feePaid,
                       keyboardType: TextInputType.number,
                       decoration: _dec('Paid (Rs.)'),
@@ -436,18 +450,19 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
               ),
               const SizedBox(height: 10),
               TextField(
+                readOnly: teacherReadOnly,
                 controller: _feeDueDate,
                 decoration: _dec('Due date (e.g. 2026-09-15)'),
               ),
               const SizedBox(height: 10),
-              OutlinedButton.icon(
+              if (!teacherReadOnly) OutlinedButton.icon(
                 onPressed: _saving ? null : _recordPayment,
                 icon: const Icon(Icons.receipt_long_rounded),
                 label: const Text('Record a payment (adds to history)'),
               ),
               const SizedBox(height: 18),
 
-              FilledButton(
+              if (!teacherReadOnly) FilledButton(
                 onPressed: _saving ? null : _save,
                 child: Text(_saving ? 'Saving…' : 'Save all details'),
               ),

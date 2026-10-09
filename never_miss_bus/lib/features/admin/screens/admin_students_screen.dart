@@ -72,9 +72,15 @@ class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
           final List<AppUser> filtered = students.where((AppUser s) {
             final bool matchesClass =
                 _classFilter == null || s.classSection == _classFilter;
-            final bool matchesQuery = _query.isEmpty ||
-                s.fullName.toLowerCase().contains(_query.toLowerCase()) ||
-                s.email.toLowerCase().contains(_query.toLowerCase());
+            final String q = _query.trim().toLowerCase();
+            final bool matchesQuery = q.isEmpty || <String>[
+              s.fullName,
+              s.classSection ?? '',
+              s.rollNumber ?? '',
+              s.phone ?? '',
+              s.email,
+              s.contactEmail ?? '',
+            ].any((String value) => value.toLowerCase().contains(q));
             return matchesClass && matchesQuery;
           }).toList();
 
@@ -84,7 +90,7 @@ class _AdminStudentsScreenState extends ConsumerState<AdminStudentsScreen> {
               children: <Widget>[
                 TextField(
                   decoration: const InputDecoration(
-                    hintText: 'Search by name or email…',
+                    hintText: 'Search name, class, roll, phone or email…',
                     prefixIcon: Icon(Icons.search_rounded),
                   ),
                   onChanged: (String v) => setState(() => _query = v),
