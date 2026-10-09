@@ -567,6 +567,7 @@ class AdminService {
     required String body,
     required String scope, // 'all' | 'bus'
     String? busId,
+    String? classSection,
   }) async {
     try {
       Query<Map<String, dynamic>> q =
@@ -578,6 +579,13 @@ class AdminService {
           );
         }
         q = q.where('busId', isEqualTo: busId);
+      } else if (scope == 'class') {
+        if (classSection == null || classSection.trim().isEmpty) {
+          return const Err<void>(
+            AppFailure('invalid', 'Choose a class first.'),
+          );
+        }
+        q = q.where('classSection', isEqualTo: classSection.trim());
       }
       final QuerySnapshot<Map<String, dynamic>> users = await q.get();
 
@@ -605,7 +613,11 @@ class AdminService {
       if (ops > 0) await batch.commit();
 
       await _audit('ANNOUNCEMENT_SENT', 'notification', scope,
-          <String, dynamic>{'title': title, 'busId': busId},);
+          <String, dynamic>{
+            'title': title,
+            'busId': busId,
+            'classSection': classSection,
+          },);
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
       return Err<void>(e.code == 'permission-denied'

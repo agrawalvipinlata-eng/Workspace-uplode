@@ -345,6 +345,13 @@ export const sendAnnouncement = onCall(async (req) => {
     const bus = await db.collection("buses").doc(busId).get();
     const driverId = bus.data()?.driverId as string | undefined;
     if (driverId) uids.push(driverId);
+  } else if (scope === "class") {
+    const classSection = requireString(req.data.classSection, "classSection");
+    const snap = await db.collection("users")
+      .where("isActive", "==", true)
+      .where("role", "==", "student")
+      .where("classSection", "==", classSection).get();
+    uids = snap.docs.map((d) => d.id);
   } else if (scope === "user") {
     uids = [requireString(req.data.uid, "uid")];
   } else {
@@ -353,7 +360,12 @@ export const sendAnnouncement = onCall(async (req) => {
 
   await db.collection("notifications").add({
     type: "announcement", title, body,
-    audience: { scope, busId: req.data.busId ?? null, uid: req.data.uid ?? null },
+    audience: {
+      scope,
+      busId: req.data.busId ?? null,
+      classSection: req.data.classSection ?? null,
+      uid: req.data.uid ?? null,
+    },
     createdBy: adminUid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });

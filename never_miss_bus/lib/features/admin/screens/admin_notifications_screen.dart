@@ -7,6 +7,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/nmb_dialogs.dart';
 import '../../../core/widgets/responsive_scaffold_body.dart';
+import '../../../models/app_user.dart';
 import '../../../models/bus.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
@@ -29,6 +30,7 @@ class _AdminNotificationsScreenState
   final TextEditingController _body = TextEditingController();
   String _scope = 'all';
   String? _busId;
+  String? _classSection;
   bool _sending = false;
 
   @override
@@ -45,13 +47,19 @@ class _AdminNotificationsScreenState
           isError: true,);
       return;
     }
+    if (_scope == 'class' && _classSection == null) {
+      showNmbSnack(context, 'Choose a class for this announcement.',
+          isError: true,);
+      return;
+    }
     final bool confirmed = await showNmbConfirmDialog(
       context,
       title: 'Send announcement?',
-      message: _scope == 'all'
-          ? 'This will notify every active user.'
-          : 'This will notify all students and the driver of the selected '
-              'bus.',
+        message: _scope == 'all'
+            ? 'This will notify every active user.'
+            : _scope == 'bus'
+                ? 'This will notify all students and the driver of the selected bus.'
+                : 'This will notify active students of the selected class.',
       confirmLabel: 'Send',
       icon: Icons.campaign_rounded,
     );
@@ -64,6 +72,7 @@ class _AdminNotificationsScreenState
               body: _body.text.trim(),
               scope: _scope,
               busId: _scope == 'bus' ? _busId : null,
+              classSection: _scope == 'class' ? _classSection : null,
             );
     if (!mounted) return;
     setState(() => _sending = false);
@@ -81,6 +90,13 @@ class _AdminNotificationsScreenState
   Widget build(BuildContext context) {
     final List<Bus> buses =
         ref.watch(allBusesProvider).valueOrNull ?? const <Bus>[];
+    final List<String> classes = (ref.watch(allStudentsProvider).valueOrNull ??
+            const <AppUser>[])
+        .map((AppUser s) => s.classSection ?? '')
+        .where((String c) => c.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
@@ -128,6 +144,11 @@ class _AdminNotificationsScreenState
                           label: Text('One bus'),
                           icon: Icon(Icons.directions_bus_rounded),
                         ),
+                        ButtonSegment<String>(
+                          value: 'class',
+                          label: Text('One class'),
+                          icon: Icon(Icons.school_rounded),
+                        ),
                       ],
                       selected: <String>{_scope},
                       onSelectionChanged: (Set<String> s) =>
@@ -148,6 +169,21 @@ class _AdminNotificationsScreenState
                         ],
                         onChanged: (String? v) =>
                             setState(() => _busId = v),
+                      ),
+                    ],
+                    if (_scope == 'class') ...<Widget>[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _classSection,
+                        decoration: const InputDecoration(
+                          hintText: 'Select class',
+                        ),
+                        items: <DropdownMenuItem<String>>[
+                          for (final String c in classes)
+                            DropdownMenuItem<String>(value: c, child: Text(c)),
+                        ],
+                        onChanged: (String? v) =>
+                            setState(() => _classSection = v),
                       ),
                     ],
                     const SizedBox(height: 16),
