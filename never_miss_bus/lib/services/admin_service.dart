@@ -364,6 +364,11 @@ class AdminService {
     required String uid,
     required double amount,
   }) async {
+    if (amount <= 0 || !amount.isFinite) {
+      return const Err<void>(
+        AppFailure('invalid-amount', 'Payment amount must be positive.'),
+      );
+    }
     try {
       final DocumentReference<Map<String, dynamic>> ref =
           _db.collection('users').doc(uid);
@@ -375,6 +380,10 @@ class AdminService {
                 .cast<String, dynamic>();
         final double paid =
             ((fees['paid'] as num?) ?? 0).toDouble() + amount;
+        final double total = ((fees['total'] as num?) ?? 0).toDouble();
+        if (total > 0 && paid > total) {
+          throw StateError('Payment cannot be greater than total fees.');
+        }
         final List<dynamic> history =
             (fees['history'] as List?) ?? <dynamic>[];
         history.insert(0, <String, dynamic>{

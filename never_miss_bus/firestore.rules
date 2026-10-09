@@ -64,7 +64,16 @@ service cloud.firestore {
       allow update: if (isAdmin()
           && (uid != request.auth.uid
               || (request.resource.data.role == resource.data.role
-                  && request.resource.data.isActive == true)))
+                  && request.resource.data.isActive == true))
+          && (!request.resource.data.keys().hasAny(['fees'])
+              || (request.resource.data.fees is map
+                  && request.resource.data.fees.total is number
+                  && request.resource.data.fees.paid is number
+                  && request.resource.data.fees.total >= 0
+                  && request.resource.data.fees.paid >= 0
+                  && (request.resource.data.fees.total == 0
+                      || request.resource.data.fees.paid
+                           <= request.resource.data.fees.total)))
         || (isTeacher()
             && resource.data.role == 'student'
             && resource.data.classSection == me().classSection

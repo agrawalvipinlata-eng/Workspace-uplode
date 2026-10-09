@@ -212,6 +212,17 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
     setState(() => _saving = true);
     final double total = double.tryParse(_feeTotal.text.trim()) ?? 0;
     final double paid = double.tryParse(_feePaid.text.trim()) ?? 0;
+    if (!total.isFinite || !paid.isFinite || total < 0 || paid < 0) {
+      setState(() => _saving = false);
+      showNmbSnack(context, 'Fees cannot be negative.', isError: true);
+      return;
+    }
+    if (total > 0 && paid > total) {
+      setState(() => _saving = false);
+      showNmbSnack(context, 'Paid amount cannot exceed total fees.',
+          isError: true,);
+      return;
+    }
 
     final Result<void> result =
         await ref.read(adminServiceProvider).updateUserProfile(
