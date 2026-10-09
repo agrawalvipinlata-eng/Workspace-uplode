@@ -13,7 +13,6 @@ import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'app_providers.dart';
 
-
 /// During logout, active Firestore streams briefly lose permission and
 /// emit permission-denied. That is EXPECTED — swallow stream errors and
 /// end the stream quietly instead of crashing/error-screening the app.
@@ -49,7 +48,8 @@ final StreamProvider<AppUser?> myProfileProvider =
     StreamProvider<AppUser?>((Ref ref) {
   final AuthSession? session = ref.watch(currentSessionProvider);
   if (session == null) return Stream<AppUser?>.value(null);
-  return _quiet(ref.watch(firestoreServiceProvider).watchUser(session.uid), null);
+  return _quiet(
+      ref.watch(firestoreServiceProvider).watchUser(session.uid), null);
 });
 
 /// The signed-in user's assigned bus (students & drivers).
@@ -65,7 +65,8 @@ final StreamProvider<BusRoute?> myRouteProvider =
     StreamProvider<BusRoute?>((Ref ref) {
   final String? busId = ref.watch(currentSessionProvider)?.busId;
   if (busId == null || busId.isEmpty) return Stream<BusRoute?>.value(null);
-  return _quiet(ref.watch(firestoreServiceProvider).watchRouteOfBus(busId), null);
+  return _quiet(
+      ref.watch(firestoreServiceProvider).watchRouteOfBus(busId), null);
 });
 
 final StreamProvider<List<BusStop>> myStopsProvider =
@@ -74,7 +75,8 @@ final StreamProvider<List<BusStop>> myStopsProvider =
   if (busId == null || busId.isEmpty) {
     return Stream<List<BusStop>>.value(const <BusStop>[]);
   }
-  return _quiet(ref.watch(firestoreServiceProvider).watchStopsOfBus(busId), const <BusStop>[]);
+  return _quiet(ref.watch(firestoreServiceProvider).watchStopsOfBus(busId),
+      const <BusStop>[]);
 });
 
 /// The student's own assigned stop.
@@ -94,7 +96,8 @@ final StreamProvider<Trip?> myBusActiveTripProvider =
     StreamProvider<Trip?>((Ref ref) {
   final String? busId = ref.watch(currentSessionProvider)?.busId;
   if (busId == null || busId.isEmpty) return Stream<Trip?>.value(null);
-  return _quiet(ref.watch(firestoreServiceProvider).watchActiveTripOfBus(busId), null);
+  return _quiet(
+      ref.watch(firestoreServiceProvider).watchActiveTripOfBus(busId), null);
 });
 
 /// Live location of my bus. Rules restrict this to the assigned bus.
@@ -104,13 +107,13 @@ final StreamProvider<LiveLocation?> myBusLiveLocationProvider =
   if (busId == null || busId.isEmpty) {
     return Stream<LiveLocation?>.value(null);
   }
-  return _quiet(ref.watch(liveLocationServiceProvider).watchBusLocation(busId), null);
+  return _quiet(
+      ref.watch(liveLocationServiceProvider).watchBusLocation(busId), null);
 });
 
 /// Freshness ticker: re-evaluates freshness every 10s even without new data,
 /// so a silent GPS flips LIVE → stale → unavailable honestly.
-final StreamProvider<DateTime> freshnessTickProvider =
-    StreamProvider<DateTime>(
+final StreamProvider<DateTime> freshnessTickProvider = StreamProvider<DateTime>(
   (Ref ref) => Stream<DateTime>.periodic(
     const Duration(seconds: 10),
     (_) => DateTime.now(),
@@ -133,7 +136,8 @@ final StreamProvider<List<AppNotification>> inboxProvider =
   if (session == null) {
     return Stream<List<AppNotification>>.value(const <AppNotification>[]);
   }
-  return _quiet(ref.watch(firestoreServiceProvider).watchInbox(session.uid), const <AppNotification>[]);
+  return _quiet(ref.watch(firestoreServiceProvider).watchInbox(session.uid),
+      const <AppNotification>[]);
 });
 
 final Provider<int> unreadCountProvider = Provider<int>((Ref ref) {
@@ -146,7 +150,9 @@ final Provider<int> unreadCountProvider = Provider<int>((Ref ref) {
 final StreamProvider<Map<String, dynamic>?> schoolConfigProvider =
     StreamProvider<Map<String, dynamic>?>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchSchoolConfig(), null,),
+    ref.watch(firestoreServiceProvider).watchSchoolConfig(),
+    null,
+  ),
 );
 
 /// ── Role-scoped user streams ─────────────────────────────────────────
@@ -155,10 +161,12 @@ final StreamProvider<List<AppUser>> allStudentsProvider =
   (Ref ref) {
     final AppUser? me = ref.watch(myProfileProvider).valueOrNull;
     final FirestoreService service = ref.watch(firestoreServiceProvider);
+    final String? teacherClass =
+        me?.role == UserRole.teacher ? me?.classSection : null;
     final Stream<List<AppUser>> source = me?.role == UserRole.teacher
-        ? (me.classSection == null
+        ? (teacherClass == null
             ? Stream<List<AppUser>>.value(const <AppUser>[])
-            : service.watchStudentsOfClass(me.classSection!))
+            : service.watchStudentsOfClass(teacherClass))
         : service.watchUsersByRole('student');
     return _quiet(source, const <AppUser>[]);
   },
@@ -167,41 +175,47 @@ final StreamProvider<List<AppUser>> allStudentsProvider =
 final StreamProvider<List<AppUser>> allTeachersProvider =
     StreamProvider<List<AppUser>>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchUsersByRole('teacher'),
-      const <AppUser>[],),
+    ref.watch(firestoreServiceProvider).watchUsersByRole('teacher'),
+    const <AppUser>[],
+  ),
 );
 
 final StreamProvider<List<AppUser>> allDriversProvider =
     StreamProvider<List<AppUser>>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchUsersByRole('driver'),
-      const <AppUser>[],),
+    ref.watch(firestoreServiceProvider).watchUsersByRole('driver'),
+    const <AppUser>[],
+  ),
 );
 
-final StreamProvider<List<Bus>> allBusesProvider =
-    StreamProvider<List<Bus>>(
-  (Ref ref) =>
-      _quiet(ref.watch(firestoreServiceProvider).watchAllBuses(), const <Bus>[]),
+final StreamProvider<List<Bus>> allBusesProvider = StreamProvider<List<Bus>>(
+  (Ref ref) => _quiet(
+      ref.watch(firestoreServiceProvider).watchAllBuses(), const <Bus>[]),
 );
 
 final StreamProvider<List<Trip>> activeTripsProvider =
     StreamProvider<List<Trip>>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchActiveTrips(), const <Trip>[],),
+    ref.watch(firestoreServiceProvider).watchActiveTrips(),
+    const <Trip>[],
+  ),
 );
 
 final StreamProvider<List<AuditLog>> auditLogsProvider =
     StreamProvider<List<AuditLog>>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchAuditLogs(), const <AuditLog>[],),
+    ref.watch(firestoreServiceProvider).watchAuditLogs(),
+    const <AuditLog>[],
+  ),
 );
 
 /// Stops of an arbitrary bus (admin screens).
 final StreamProviderFamily<List<BusStop>, String> stopsOfBusProvider =
     StreamProvider.family<List<BusStop>, String>(
   (Ref ref, String busId) => _quiet(
-      ref.watch(firestoreServiceProvider).watchStopsOfBus(busId),
-      const <BusStop>[],),
+    ref.watch(firestoreServiceProvider).watchStopsOfBus(busId),
+    const <BusStop>[],
+  ),
 );
 
 /// Live location of an arbitrary bus (admin monitoring only; rules permit
@@ -209,12 +223,16 @@ final StreamProviderFamily<List<BusStop>, String> stopsOfBusProvider =
 final StreamProviderFamily<LiveLocation?, String> busLiveLocationProvider =
     StreamProvider.family<LiveLocation?, String>(
   (Ref ref, String busId) => _quiet(
-      ref.watch(liveLocationServiceProvider).watchBusLocation(busId), null,),
+    ref.watch(liveLocationServiceProvider).watchBusLocation(busId),
+    null,
+  ),
 );
 
 /// Admin: recent trip history (rules: admin-only read of all trips).
 final StreamProvider<List<Trip>> recentTripsProvider =
     StreamProvider<List<Trip>>(
   (Ref ref) => _quiet(
-      ref.watch(firestoreServiceProvider).watchRecentTrips(), const <Trip>[],),
+    ref.watch(firestoreServiceProvider).watchRecentTrips(),
+    const <Trip>[],
+  ),
 );

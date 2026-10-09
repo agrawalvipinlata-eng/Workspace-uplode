@@ -5,7 +5,6 @@ import '../../../core/widgets/state_views.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
-import '../../../services/schoolwork_service.dart';
 
 class TeacherSchoolworkScreen extends ConsumerStatefulWidget {
   const TeacherSchoolworkScreen({super.key});
