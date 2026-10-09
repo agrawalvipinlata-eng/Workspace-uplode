@@ -28,6 +28,7 @@ class _TeacherAttendanceScreenState
     extends ConsumerState<TeacherAttendanceScreen> {
   final Map<String, bool> _marks = <String, bool>{};
   bool _loaded = false;
+  bool _locked = false;
   bool _saving = false;
   final DateTime _date = DateTime.now();
 
@@ -36,15 +37,19 @@ class _TeacherAttendanceScreenState
     _loaded = true;
     final AttendanceService svc = ref.read(attendanceServiceProvider);
     try {
-      final Map<String, bool>? existing =
+      final AttendanceRecord? existing =
           await svc.getForDate(classSection, _date);
       if (existing != null && mounted) {
-        setState(() => _marks.addAll(existing));
+        setState(() {
+          _marks.addAll(existing.marks);
+          _locked = existing.locked;
+        });
       }
     } catch (_) {/* fresh day */}
   }
 
   Future<void> _save(String classSection, List<AppUser> students) async {
+    if (_locked) return;
     final AttendanceService svc = ref.read(attendanceServiceProvider);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     final String? myUid = ref.read(currentSessionProvider)?.uid;
@@ -64,11 +69,14 @@ class _TeacherAttendanceScreenState
     );
     if (mounted) setState(() => _saving = false);
     result.when(
-      ok: (_) => messenger.showSnackBar(const SnackBar(
-        backgroundColor: Color(0xFF1E8E3E),
-        content: Text('Attendance saved ✓',
-            style: TextStyle(color: Colors.white),),
-      ),),
+      ok: (_) {
+        if (mounted) setState(() => _locked = true);
+        messenger.showSnackBar(const SnackBar(
+          backgroundColor: Color(0xFF1E8E3E),
+          content: Text('Attendance saved and locked ✓',
+              style: TextStyle(color: Colors.white),),
+        ),);
+      },
       err: (AppFailure f) => messenger.showSnackBar(SnackBar(
         backgroundColor: const Color(0xFFC5221F),
         content:
@@ -144,7 +152,7 @@ class _TeacherAttendanceScreenState
                         ),
                       ),
                       TextButton(
-                        onPressed: () => setState(() {
+                        onPressed: _locked ? null : () => setState(() {
                           for (final AppUser s in students) {
                             _marks[s.uid] = true;
                           }
@@ -155,6 +163,17 @@ class _TeacherAttendanceScreenState
                   ),
                 ),
               ),
+              if (_locked)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Attendance submitted and locked. Admin correction only.',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
               // Student list — tap = toggle
               Expanded(
                 child: ListView.builder(
@@ -172,8 +191,11 @@ class _TeacherAttendanceScreenState
                         borderRadius: BorderRadius.circular(14),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14),
-                          onTap: () =>
-                              setState(() => _marks[s.uid] = !present),
+                          onTap: _locked
+                              ? null
+                              : () => setState(
+                                    () => _marks[s.uid] = !present,
+                                  ),
                           child: Padding(
                             padding: const EdgeInsets.all(10),
                             child: Row(
@@ -228,7 +250,7 @@ class _TeacherAttendanceScreenState
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _saving || myClass == null && !iAmTeacher == false
+        onPressed: _saving || (iAmTeacher && myClass == null) || _locked
             ? null
             : () {
                 final List<AppUser> all =

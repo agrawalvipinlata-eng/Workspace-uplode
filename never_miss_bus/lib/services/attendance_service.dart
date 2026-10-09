@@ -12,6 +12,13 @@ import '../core/utils/result.dart';
 ///   }
 /// Rules: teacher/admin apni class ka doc likh sakta hai; student sirf
 /// woh docs padh sakta hai jisme uska uid marks me hai (apni class ke).
+class AttendanceRecord {
+  const AttendanceRecord({required this.marks, required this.locked});
+
+  final Map<String, bool> marks;
+  final bool locked;
+}
+
 class AttendanceService {
   AttendanceService(this._db);
 
@@ -23,8 +30,8 @@ class AttendanceService {
   static String docId(String classSection, DateTime d) =>
       '${classSection}_${dateKey(d)}';
 
-  /// Aaj ki attendance load karo (edit ke liye) — null = abhi nahi lagi.
-  Future<Map<String, bool>?> getForDate(
+  /// Attendance load karo. Existing records are read-only for teachers.
+  Future<AttendanceRecord?> getForDate(
     String classSection,
     DateTime date,
   ) async {
@@ -33,11 +40,14 @@ class AttendanceService {
         .doc(docId(classSection, date))
         .get()
         .timeout(const Duration(seconds: 10));
-    final Map<String, dynamic>? marks =
+    final Map<String, dynamic>? rawMarks =
         (doc.data()?['marks'] as Map?)?.cast<String, dynamic>();
-    if (marks == null) return null;
-    return marks.map(
-      (String k, dynamic v) => MapEntry<String, bool>(k, v == true),
+    if (rawMarks == null) return null;
+    return AttendanceRecord(
+      marks: rawMarks.map(
+        (String k, dynamic v) => MapEntry<String, bool>(k, v == true),
+      ),
+      locked: doc.data()?['locked'] != false,
     );
   }
 
@@ -58,7 +68,21 @@ class AttendanceService {
         'takenBy': takenBy,
         'takenAt': FieldValue.serverTimestamp(),
         'marks': marks,
+        'locked': true,
       }).timeout(const Duration(seconds: 10));
+      final AttendanceRecord? saved = await getForDate(classSection, date);
+      if (saved == null || !saved.locked || saved.marks.length != marks.length) {
+        return const Err<void>(
+          AppFailure('att-verify', 'Attendance save verify नहीं हो सका।'),
+        );
+      }
+      for (final MapEntry<String, bool> entry in marks.entries) {
+        if (saved.marks[entry.key] != entry.value) {
+          return const Err<void>(
+            AppFailure('att-verify', 'Attendance save verify नहीं हो सका।'),
+          );
+        }
+      }
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
       return Err<void>(AppFailure(

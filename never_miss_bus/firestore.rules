@@ -171,14 +171,19 @@ service cloud.firestore {
     }
 
     // ── config ───────────────────────────────────────────────────────
-    // ── attendance (class-wise; teacher/admin write, student apna padhe) ─
+    // ── attendance (teacher submits once; admin may correct) ───────────
     match /attendance/{attId} {
-      allow read: if isStaff()
+      allow read: if isAdmin()
+        || (isTeacher()
+            && resource.data.classSection == me().classSection)
         || (isStudent()
             && resource.data.classSection == me().classSection);
-      allow create, update: if isAdmin()
+      allow create: if isAdmin()
         || (isTeacher()
-            && request.resource.data.classSection == me().classSection);
+            && request.resource.data.classSection == me().classSection
+            && request.resource.data.takenBy == request.auth.uid
+            && request.resource.data.locked == true);
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
