@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +34,7 @@ import '../features/student/screens/student_alerts_screen.dart';
 import '../features/student/screens/student_bus_details_screen.dart';
 import '../features/student/screens/student_home_screen.dart';
 import '../features/student/screens/student_map_screen.dart';
+import '../features/student/screens/student_modules_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
@@ -70,7 +70,8 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
       final String loc = state.matchedLocation;
       final bool onAuthScreen = loc == '/login' || loc == '/splash';
 
-      if (session == null) return onAuthScreen ? (loc == '/splash' ? '/login' : null) : '/login';
+      if (session == null)
+        return onAuthScreen ? (loc == '/splash' ? '/login' : null) : '/login';
 
       final String home = switch (session.role) {
         UserRole.student => '/student/home',
@@ -93,78 +94,87 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         builder: (_, __, StatefulNavigationShell shell) =>
             StudentShell(shell: shell),
         branches: <StatefulShellBranch>[
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/student/home',
-              builder: (_, __) => const StudentHomeScreen(),
-              routes: <RouteBase>[
-                GoRoute(
-                  path: 'bus',
-                  builder: (_, __) => const StudentBusDetailsScreen(),
-                ),
-                GoRoute(
-                  path: 'stops',
-                  builder: (_, __) => const StudentStopsScreen(),
-                ),
-                GoRoute(
-                  path: 'customize',
-                  builder: (_, __) => const CustomizeHomeScreen(),
-                ),
-                GoRoute(
-                  path: 'leave',
-                  builder: (_, __) => const LeaveApplicationScreen(),
-                ),
-                GoRoute(
-                  path: 'attendance',
-                  builder: (_, __) => const MyAttendanceScreen(),
-                ),
-                GoRoute(
-                  path: 'homework',
-                  builder: (_, __) => const HomeworkScreen(),
-                ),
-              ],
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/student/map',
-              builder: (_, __) => const StudentMapScreen(),
-            ),
-          ],),
-          // v1.1.1: My Stop as its own tab (5-tab navigation)
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/student/mystop',
-              builder: (_, __) => const StudentStopsScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/student/alerts',
-              builder: (_, __) => const StudentAlertsScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/student/profile',
-              builder: (_, __) => const StudentProfileScreen(),
-              routes: <RouteBase>[
-                GoRoute(
-                  path: 'settings',
-                  builder: (_, __) => const StudentSettingsScreen(),
-                ),
-                GoRoute(
-                  path: 'privacy',
-                  builder: (_, __) => const PrivacyPolicyScreen(),
-                ),
-                GoRoute(
-                  path: 'password',
-                  builder: (_, __) =>
-                      const ChangePasswordScreen(forced: true),
-                ),
-              ],
-            ),
-          ],),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/student/home',
+                builder: (_, __) => const StudentHomeScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'bus',
+                    builder: (_, __) => const StudentBusDetailsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'stops',
+                    builder: (_, __) => const StudentStopsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'customize',
+                    builder: (_, __) => const CustomizeHomeScreen(),
+                  ),
+                  GoRoute(
+                    path: 'leave',
+                    builder: (_, __) => const LeaveApplicationScreen(),
+                  ),
+                  GoRoute(
+                    path: 'attendance',
+                    builder: (_, __) => const MyAttendanceScreen(),
+                  ),
+                  GoRoute(
+                    path: 'homework',
+                    builder: (_, __) => const HomeworkScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/student/modules',
+                builder: (_, __) => const StudentModulesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/student/map',
+                builder: (_, __) => const StudentMapScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/student/alerts',
+                builder: (_, __) => const StudentAlertsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/student/profile',
+                builder: (_, __) => const StudentProfileScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'settings',
+                    builder: (_, __) => const StudentSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'privacy',
+                    builder: (_, __) => const PrivacyPolicyScreen(),
+                  ),
+                  GoRoute(
+                    path: 'password',
+                    builder: (_, __) =>
+                        const ChangePasswordScreen(forced: true),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -173,36 +183,46 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         builder: (_, __, StatefulNavigationShell shell) =>
             TeacherShell(shell: shell),
         branches: <StatefulShellBranch>[
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/teacher/class',
-              builder: (_, __) => const TeacherClassScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/teacher/attendance',
-              builder: (_, __) => const TeacherAttendanceScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/teacher/applications',
-              builder: (_, __) => const TeacherApplicationsScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/teacher/profile',
-              builder: (_, __) => const TeacherProfileScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/teacher/schoolwork',
-              builder: (_, __) => const TeacherSchoolworkScreen(),
-            ),
-          ],),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/class',
+                builder: (_, __) => const TeacherClassScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/attendance',
+                builder: (_, __) => const TeacherAttendanceScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/applications',
+                builder: (_, __) => const TeacherApplicationsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/profile',
+                builder: (_, __) => const TeacherProfileScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/schoolwork',
+                builder: (_, __) => const TeacherSchoolworkScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -211,24 +231,30 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         builder: (_, __, StatefulNavigationShell shell) =>
             DriverShell(shell: shell),
         branches: <StatefulShellBranch>[
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/driver/home',
-              builder: (_, __) => const DriverHomeScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/driver/route',
-              builder: (_, __) => const DriverRouteScreen(),
-            ),
-          ],),
-          StatefulShellBranch(routes: <RouteBase>[
-            GoRoute(
-              path: '/driver/profile',
-              builder: (_, __) => const DriverProfileScreen(),
-            ),
-          ],),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/driver/home',
+                builder: (_, __) => const DriverHomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/driver/route',
+                builder: (_, __) => const DriverRouteScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/driver/profile',
+                builder: (_, __) => const DriverProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 

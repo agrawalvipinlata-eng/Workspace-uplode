@@ -30,7 +30,8 @@ class StudentDrawer extends ConsumerWidget {
     final bool ok = await showNmbConfirmDialog(
       context,
       title: 'Log out?',
-      message: 'You will need your Class + Roll number + password to sign back in.',
+      message:
+          'You will need your Class + Roll number + password to sign back in.',
       confirmLabel: 'Log out',
       destructive: true,
       icon: Icons.logout_rounded,
@@ -77,8 +78,10 @@ class StudentDrawer extends ConsumerWidget {
           ),
           selected: selected,
           selectedTileColor: NmbColors.primarySoft,
-          leading: Icon(icon,
-              color: selected ? NmbColors.primary : NmbColors.textSecondary,),
+          leading: Icon(
+            icon,
+            color: selected ? NmbColors.primary : NmbColors.textSecondary,
+          ),
           title: Text(
             label,
             style: NmbTypography.body.copyWith(
@@ -89,7 +92,9 @@ class StudentDrawer extends ConsumerWidget {
           trailing: badge > 0
               ? Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3,),
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: const BoxDecoration(
                     color: NmbColors.danger,
                     shape: BoxShape.circle,
@@ -156,8 +161,7 @@ class StudentDrawer extends ConsumerWidget {
                           width: 20,
                           height: 20,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const SizedBox.shrink(),
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -186,7 +190,7 @@ class StudentDrawer extends ConsumerWidget {
                 item(
                   icon: Icons.map_rounded,
                   label: tr('Track My Bus', 'बस ट्रैक करें'),
-                  path: '/student/map',
+                  path: '/student/home/stops',
                 ),
                 item(
                   icon: Icons.pin_drop_rounded,

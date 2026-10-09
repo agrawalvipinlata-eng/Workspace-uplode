@@ -1,7 +1,7 @@
 name: never_miss_bus
 description: "Never Miss Bus — secure school bus live tracking for SRBS International School."
 publish_to: "none"
-version: 1.0.0+31
+version: 1.0.0+32
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

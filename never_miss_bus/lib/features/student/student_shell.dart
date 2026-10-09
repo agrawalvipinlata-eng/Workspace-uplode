@@ -10,8 +10,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/data_providers.dart';
 import 'screens/change_password_screen.dart';
 
-/// v1.1.1 Student shell — 5 tabs like the design mock:
-/// Home · Track Bus · My Stop · Notifications · Profile.
+/// SRBS student shell — Dashboard · Modules · Track · Notifications · Account.
 class StudentShell extends ConsumerWidget {
   const StudentShell({super.key, required this.shell});
 
@@ -68,14 +67,14 @@ class StudentShell extends ConsumerWidget {
               label: tr('Home', 'होम'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.map_outlined),
-              selectedIcon: const Icon(Icons.map_rounded),
-              label: tr('Track Bus', 'बस देखो'),
+              icon: const Icon(Icons.grid_view_outlined),
+              selectedIcon: const Icon(Icons.grid_view_rounded),
+              label: tr('Modules', 'मॉड्यूल्स'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.pin_drop_outlined),
-              selectedIcon: const Icon(Icons.pin_drop_rounded),
-              label: tr('My Stop', 'मेरा स्टॉप'),
+              icon: const Icon(Icons.map_outlined),
+              selectedIcon: const Icon(Icons.map_rounded),
+              label: tr('Track', 'ट्रैक'),
             ),
             NavigationDestination(
               icon: Badge(
@@ -93,7 +92,7 @@ class StudentShell extends ConsumerWidget {
             NavigationDestination(
               icon: const Icon(Icons.person_outline_rounded),
               selectedIcon: const Icon(Icons.person_rounded),
-              label: tr('Profile', 'प्रोफ़ाइल'),
+              label: tr('Account', 'अकाउंट'),
             ),
           ],
         ),
