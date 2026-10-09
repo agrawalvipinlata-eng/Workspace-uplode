@@ -81,7 +81,8 @@ service cloud.firestore {
             && request.resource.data.classSection == me().classSection
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['fullName', 'phone', 'contactEmail', 'photoB64',
-                           'settings', 'updatedAt']));
+                           'fatherPhotoB64', 'motherPhotoB64', 'settings',
+                           'updatedAt']));
 
       allow delete: if isAdmin()
         || (isTeacher()

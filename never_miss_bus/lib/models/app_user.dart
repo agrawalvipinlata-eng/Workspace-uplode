@@ -21,6 +21,8 @@ class AppUser {
     this.activeDevice,
     this.fatherName,
     this.motherName,
+    this.fatherPhotoB64,
+    this.motherPhotoB64,
     this.dob,
     this.bloodGroup,
     this.address,
@@ -53,6 +55,8 @@ class AppUser {
   // ── Extended student profile (school records) ──
   final String? fatherName;
   final String? motherName;
+  final String? fatherPhotoB64;
+  final String? motherPhotoB64;
   final String? dob; // ISO date string e.g. 2014-05-21
   final String? bloodGroup;
   final String? address;
@@ -77,8 +81,7 @@ class AppUser {
     if (d == null) return null;
     final DateTime now = DateTime.now();
     int a = now.year - d.year;
-    if (now.month < d.month ||
-        (now.month == d.month && now.day < d.day)) a--;
+    if (now.month < d.month || (now.month == d.month && now.day < d.day)) a--;
     return (a >= 0 && a < 100) ? a : null;
   }
 
@@ -133,14 +136,18 @@ class AppUser {
             ?.cast<String, dynamic>(),
         fatherName: map['fatherName'] as String?,
         motherName: map['motherName'] as String?,
+        fatherPhotoB64: map['fatherPhotoB64'] as String?,
+        motherPhotoB64: map['motherPhotoB64'] as String?,
         dob: map['dob'] as String?,
         bloodGroup: map['bloodGroup'] as String?,
         address: map['address'] as String?,
         admissionNumber: map['admissionNumber'] as String?,
         contactEmail: map['contactEmail'] as String?,
         documents: Map<String, bool>.from(
-          (map['documents'] as Map?)?.map((Object? k, Object? v) =>
-                  MapEntry<String, bool>('$k', v == true),) ??
+          (map['documents'] as Map?)?.map(
+                (Object? k, Object? v) =>
+                    MapEntry<String, bool>('$k', v == true),
+              ) ??
               <String, bool>{},
         ),
         fees: (map['fees'] as Map?)?.cast<String, dynamic>(),

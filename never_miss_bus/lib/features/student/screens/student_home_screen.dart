@@ -52,8 +52,10 @@ class StudentHomeScreen extends ConsumerWidget {
           if (me == null) {
             return ErrorView(
               title: tr('Account not ready', 'अकाउंट तैयार नहीं है'),
-              message: tr('Please contact the school office.',
-                  'कृपया स्कूल ऑफिस से संपर्क करें।',),
+              message: tr(
+                'Please contact the school office.',
+                'कृपया स्कूल ऑफिस से संपर्क करें।',
+              ),
             );
           }
           return _HomeContent(me: me);
@@ -72,8 +74,7 @@ class _HomeContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final Bus? bus = ref.watch(myBusProvider).valueOrNull;
     final Trip? trip = ref.watch(myBusActiveTripProvider).valueOrNull;
-    final LiveLocation? live =
-        ref.watch(myBusLiveLocationProvider).valueOrNull;
+    final LiveLocation? live = ref.watch(myBusLiveLocationProvider).valueOrNull;
     final LocationFreshness freshness = ref.watch(myBusFreshnessProvider);
     final BusStop? myStop = ref.watch(myAssignedStopProvider);
     final List<BusStop> stops =
@@ -126,8 +127,10 @@ class _HomeContent extends ConsumerWidget {
                 color: NmbColors.warningSoft,
                 child: Row(
                   children: <Widget>[
-                    const Icon(Icons.no_transfer_rounded,
-                        color: NmbColors.warning,),
+                    const Icon(
+                      Icons.no_transfer_rounded,
+                      color: NmbColors.warning,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -155,30 +158,41 @@ class _HomeContent extends ConsumerWidget {
                       color: NmbColors.accentSoft,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(Icons.directions_bus_rounded,
-                        color: NmbColors.accentDark, size: 32,),
+                    child: Icon(
+                      Icons.directions_bus_rounded,
+                      color: NmbColors.accentDark,
+                      size: 32,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(tr('My Bus', 'मेरी बस'),
-                            style: NmbTypography.caption
-                                .copyWith(color: NmbColors.primary),),
-                        Text(bus?.busNumber ?? 'Loading…',
-                            style: NmbTypography.screenTitle,),
+                        Text(
+                          tr('My Bus', 'मेरी बस'),
+                          style: NmbTypography.caption
+                              .copyWith(color: NmbColors.primary),
+                        ),
+                        Text(
+                          bus?.busNumber ?? 'Loading…',
+                          style: NmbTypography.screenTitle,
+                        ),
                         if (bus != null)
                           Container(
                             margin: const EdgeInsets.only(top: 2),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2,),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: NmbColors.background,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(bus.plateNumber,
-                                style: NmbTypography.caption,),
+                            child: Text(
+                              bus.plateNumber,
+                              style: NmbTypography.caption,
+                            ),
                           ),
                       ],
                     ),
@@ -188,7 +202,9 @@ class _HomeContent extends ConsumerWidget {
                     children: <Widget>[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5,),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: onTrip
                               ? NmbColors.successSoft
@@ -263,22 +279,30 @@ class _HomeContent extends ConsumerWidget {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.location_on_rounded,
-                            color: NmbColors.danger, size: 30,),
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          color: NmbColors.danger,
+                          size: 30,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(tr('Track My Bus', 'मेरी बस ट्रैक करें'),
-                                style: NmbTypography.sectionTitle
-                                    .copyWith(color: Colors.white),),
                             Text(
-                                tr('See your bus live on map',
-                                    'अपनी बस नक्शे पर लाइव देखें',),
-                                style: NmbTypography.bodySecondary
-                                    .copyWith(color: Colors.white70),),
+                              tr('Track My Bus', 'मेरी बस ट्रैक करें'),
+                              style: NmbTypography.sectionTitle
+                                  .copyWith(color: Colors.white),
+                            ),
+                            Text(
+                              tr(
+                                'See your bus live on map',
+                                'अपनी बस नक्शे पर लाइव देखें',
+                              ),
+                              style: NmbTypography.bodySecondary
+                                  .copyWith(color: Colors.white70),
+                            ),
                           ],
                         ),
                       ),
@@ -289,8 +313,10 @@ class _HomeContent extends ConsumerWidget {
                           color: Colors.white24,
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Icon(Icons.chevron_right_rounded,
-                            color: Colors.white,),
+                        child: const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -302,8 +328,10 @@ class _HomeContent extends ConsumerWidget {
 
         case 'quickActions':
           return <Widget>[
-            Text(tr('Quick Actions', 'क्विक एक्शन'),
-                style: NmbTypography.sectionTitle,),
+            Text(
+              tr('Quick Actions', 'क्विक एक्शन'),
+              style: NmbTypography.sectionTitle,
+            ),
             const SizedBox(height: 12),
             Row(
               children: <Widget>[
@@ -378,9 +406,8 @@ class _HomeContent extends ConsumerWidget {
                     ),
                     child: Icon(
                       Icons.account_balance_wallet_rounded,
-                      color: me.feeDue > 0
-                          ? NmbColors.warning
-                          : NmbColors.success,
+                      color:
+                          me.feeDue > 0 ? NmbColors.warning : NmbColors.success,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -388,8 +415,10 @@ class _HomeContent extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(tr('School Fees', 'स्कूल फीस'),
-                            style: NmbTypography.caption,),
+                        Text(
+                          tr('School Fees', 'स्कूल फीस'),
+                          style: NmbTypography.caption,
+                        ),
                         Text(
                           me.feeDue > 0
                               ? '${tr('Due', 'बकाया')}: Rs. ${me.feeDue.toStringAsFixed(0)}'
@@ -402,13 +431,16 @@ class _HomeContent extends ConsumerWidget {
                         ),
                         if (me.feeDueDate != null && me.feeDue > 0)
                           Text(
-                              '${tr('Last date', 'अंतिम तिथि')}: ${me.feeDueDate}',
-                              style: NmbTypography.caption,),
+                            '${tr('Last date', 'अंतिम तिथि')}: ${me.feeDueDate}',
+                            style: NmbTypography.caption,
+                          ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded,
-                      color: NmbColors.textTertiary,),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: NmbColors.textTertiary,
+                  ),
                 ],
               ),
             ),
@@ -424,12 +456,18 @@ class _HomeContent extends ConsumerWidget {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      Icon(Icons.star_rounded,
-                          color: NmbColors.accent, size: 20,),
+                      Icon(
+                        Icons.star_rounded,
+                        color: NmbColors.accent,
+                        size: 20,
+                      ),
                       const SizedBox(width: 6),
-                      Text(tr('My Stop', 'मेरा स्टॉप'),
-                          style: NmbTypography.caption.copyWith(
-                              fontWeight: FontWeight.w700,),),
+                      Text(
+                        tr('My Stop', 'मेरा स्टॉप'),
+                        style: NmbTypography.caption.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -460,10 +498,14 @@ class _HomeContent extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(tr('Start', 'शुरुआत'),
-                            style: NmbTypography.caption,),
-                        Text(tr('School', 'स्कूल'),
-                            style: NmbTypography.caption,),
+                        Text(
+                          tr('Start', 'शुरुआत'),
+                          style: NmbTypography.caption,
+                        ),
+                        Text(
+                          tr('School', 'स्कूल'),
+                          style: NmbTypography.caption,
+                        ),
                       ],
                     ),
                   ],
@@ -484,8 +526,10 @@ class _HomeContent extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text(tr('Recent Alerts', 'हाल की सूचनाएँ'),
-                    style: NmbTypography.sectionTitle,),
+                Text(
+                  tr('Recent Alerts', 'हाल की सूचनाएँ'),
+                  style: NmbTypography.sectionTitle,
+                ),
                 TextButton(
                   onPressed: () => context.go('/student/alerts'),
                   child: Text(tr('View All', 'सभी देखें')),
@@ -505,7 +549,9 @@ class _HomeContent extends ConsumerWidget {
             else
               NmbCard(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 6,),
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 child: Column(
                   children: <Widget>[
                     for (final AppNotification n in inbox.take(3))
@@ -518,8 +564,11 @@ class _HomeContent extends ConsumerWidget {
                             color: _alertBg(n.type),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(_alertIcon(n.type),
-                              color: _alertColor(n.type), size: 20,),
+                          child: Icon(
+                            _alertIcon(n.type),
+                            color: _alertColor(n.type),
+                            size: 20,
+                          ),
                         ),
                         title: Text(n.title, style: NmbTypography.cardTitle),
                         subtitle: Text(
@@ -572,8 +621,11 @@ class _HomeContent extends ConsumerWidget {
                           Builder(
                             builder: (BuildContext ctx) => IconButton(
                               onPressed: () => Scaffold.of(ctx).openDrawer(),
-                              icon: const Icon(Icons.menu_rounded,
-                                  color: Colors.white, size: 28,),
+                              icon: const Icon(
+                                Icons.menu_rounded,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                             ),
                           ),
                           // 🏫 School logo + naam header me
@@ -604,39 +656,37 @@ class _HomeContent extends ConsumerWidget {
                             tooltip: tr('Customize Home', 'होम कस्टमाइज़'),
                             onPressed: () =>
                                 context.go('/student/home/customize'),
-                            icon: const Icon(Icons.tune_rounded,
-                                color: Colors.white,),
+                            icon: const Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white,
+                            ),
                           ),
-                          // 🆘 SOS — emergency me school ko ek-tap call
+                          // School contacts configured by admin
                           IconButton(
-                            tooltip: tr('SOS — Emergency call',
-                                'SOS — आपातकालीन कॉल',),
-                            onPressed: () => _sosCall(context, ref),
+                            tooltip: tr('School contacts', 'स्कूल संपर्क'),
+                            onPressed: () => _showContacts(context, ref),
                             icon: Container(
                               padding: const EdgeInsets.all(6),
-                              decoration: const BoxDecoration(
-                                color: NmbColors.danger,
+                              decoration: BoxDecoration(
+                                color: NmbColors.accentDark,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Text(
-                                'SOS',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                              child: const Icon(
+                                Icons.contacts_rounded,
+                                color: Colors.white,
+                                size: 18,
                               ),
                             ),
                           ),
                           Stack(
                             children: <Widget>[
                               IconButton(
-                                onPressed: () =>
-                                    context.go('/student/alerts'),
+                                onPressed: () => context.go('/student/alerts'),
                                 icon: const Icon(
-                                    Icons.notifications_outlined,
-                                    color: Colors.white,
-                                    size: 28,),
+                                  Icons.notifications_outlined,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                               ),
                               if (unread > 0)
                                 Positioned(
@@ -681,8 +731,10 @@ class _HomeContent extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  tr('Have a great day at school!',
-                                      'स्कूल में आपका दिन शुभ हो!',),
+                                  tr(
+                                    'Have a great day at school!',
+                                    'स्कूल में आपका दिन शुभ हो!',
+                                  ),
                                   style: NmbTypography.bodySecondary
                                       .copyWith(color: Colors.white70),
                                 ),
@@ -720,52 +772,44 @@ class _HomeContent extends ConsumerWidget {
     );
   }
 
-  /// 🆘 SOS: confirm → school office ko phone call.
-  Future<void> _sosCall(BuildContext context, WidgetRef ref) async {
+  /// Admin-configured school contacts: call or email from one place.
+  Future<void> _showContacts(BuildContext context, WidgetRef ref) async {
     final Map<String, dynamic>? school =
         ref.read(schoolConfigProvider).valueOrNull;
     final String? phone = school?['phone'] as String?;
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final bool ok = await showDialog<bool>(
-          context: context,
-          builder: (BuildContext ctx) => AlertDialog(
-            title: const Row(
-              children: <Widget>[
-                Icon(Icons.sos_rounded, color: NmbColors.danger),
-                SizedBox(width: 8),
-                Text('Emergency SOS'),
-              ],
+    final String? email = school?['email'] as String?;
+    if (!context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext sheet) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            const ListTile(
+              leading: Icon(Icons.contacts_rounded),
+              title: Text('School Contacts'),
+              subtitle: Text('Contacts added by the administrator'),
             ),
-            content: Text(
-              phone != null
-                  ? 'School office ko call karein?\n($phone)'
-                  : 'School ka phone number set nahi hai. '
-                      'Admin Settings me phone daalna hoga.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+            if (phone != null && phone.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.call_rounded),
+                title: Text(phone),
+                subtitle: const Text('Call school office'),
+                onTap: () => launchUrl(Uri.parse('tel:$phone')),
               ),
-              if (phone != null)
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: NmbColors.danger,),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('CALL NOW'),
-                ),
-            ],
-          ),
-        ) ??
-        false;
-    if (!ok || phone == null) return;
-    try {
-      await launchUrl(Uri.parse('tel:$phone'));
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(
-        content: Text('Call nahi lagi — dial karo: $phone'),
-      ),);
-    }
+            if (email != null && email.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.email_rounded),
+                title: Text(email),
+                subtitle: const Text('Email school office'),
+                onTap: () => launchUrl(Uri.parse('mailto:$email')),
+              ),
+            if ((phone == null || phone.isEmpty) &&
+                (email == null || email.isEmpty))
+              const ListTile(title: Text('Admin has not added contacts yet.')),
+          ],
+        ),
+      ),
+    );
   }
 
   String _greetPart() {

@@ -12,6 +12,7 @@ import '../../../core/widgets/nmb_dialogs.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
+import 'parent_photo_picker.dart';
 
 /// Admin/Teacher sheet: student ke personal details, documents checklist
 /// aur fees — sab ek jagah edit hota hai.
@@ -59,6 +60,10 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
       TextEditingController(text: widget.student.admissionNumber ?? '');
   late final TextEditingController _contactEmail =
       TextEditingController(text: widget.student.contactEmail ?? '');
+  String? _fatherPhotoB64;
+  String? _motherPhotoB64;
+  String? _newFatherPhotoB64;
+  String? _newMotherPhotoB64;
   String? _bloodGroup;
   late Map<String, bool> _docs;
 
@@ -93,6 +98,8 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
   void initState() {
     super.initState();
     _bloodGroup = widget.student.bloodGroup;
+    _fatherPhotoB64 = widget.student.fatherPhotoB64;
+    _motherPhotoB64 = widget.student.motherPhotoB64;
     _docs = <String, bool>{
       for (final String d in SchoolDocuments.all)
         d: widget.student.documents[d] ?? false,
@@ -147,6 +154,64 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
         showNmbSnack(context, 'Photo pick failed: $e', isError: true);
       }
     }
+  }
+
+  Future<void> _pickParentPhoto({required bool mother}) async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (BuildContext ctx) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: const Text('Choose from album'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_rounded),
+              title: const Text('Take with camera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final XFile? file = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 300,
+      maxHeight: 300,
+      imageQuality: 60,
+    );
+    if (file == null || !mounted) return;
+    final String encoded = base64Encode(await file.readAsBytes());
+    setState(() {
+      if (mother) {
+        _newMotherPhotoB64 = encoded;
+        _motherPhotoB64 = encoded;
+      } else {
+        _newFatherPhotoB64 = encoded;
+        _fatherPhotoB64 = encoded;
+      }
+    });
+  }
+
+  Future<void> _saveParentPhotos() async {
+    if (_newFatherPhotoB64 == null && _newMotherPhotoB64 == null) return;
+    setState(() => _saving = true);
+    final Result<void> result =
+        await ref.read(adminServiceProvider).updateUserProfile(
+      uid: widget.student.uid,
+      data: <String, dynamic>{
+        if (_newFatherPhotoB64 != null) 'fatherPhotoB64': _newFatherPhotoB64,
+        if (_newMotherPhotoB64 != null) 'motherPhotoB64': _newMotherPhotoB64,
+      },
+    );
+    if (mounted) setState(() => _saving = false);
+    result.when(
+      ok: (_) => showNmbSnack(context, 'Parent photos saved.', isSuccess: true),
+      err: (AppFailure f) => showNmbSnack(context, f.message, isError: true),
+    );
   }
 
   Future<void> _pickDob() async {
@@ -251,6 +316,8 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
       data: <String, dynamic>{
         'fatherName': _father.text.trim().isEmpty ? null : _father.text.trim(),
         'motherName': _mother.text.trim().isEmpty ? null : _mother.text.trim(),
+        'fatherPhotoB64': _fatherPhotoB64,
+        'motherPhotoB64': _motherPhotoB64,
         'dob': _dobIso.trim().isEmpty ? null : _dobIso.trim(),
         'bloodGroup': _bloodGroup,
         'address': _address.text.trim().isEmpty ? null : _address.text.trim(),
@@ -480,6 +547,35 @@ class _StudentDetailsSheetState extends ConsumerState<StudentDetailsSheet> {
                 controller: _mother,
                 decoration: _dec("Mother's name"),
               ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: ParentPhotoPicker(
+                      label: 'Father photo',
+                      encoded: _fatherPhotoB64,
+                      onTap: () => _pickParentPhoto(mother: false),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ParentPhotoPicker(
+                      label: 'Mother photo',
+                      encoded: _motherPhotoB64,
+                      onTap: () => _pickParentPhoto(mother: true),
+                    ),
+                  ),
+                ],
+              ),
+              if (_newFatherPhotoB64 != null || _newMotherPhotoB64 != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _saving ? null : _saveParentPhotos,
+                    icon: const Icon(Icons.save_rounded, size: 18),
+                    label: const Text('Save parent photos'),
+                  ),
+                ),
               const SizedBox(height: 10),
               TextField(
                 readOnly: teacherReadOnly,
