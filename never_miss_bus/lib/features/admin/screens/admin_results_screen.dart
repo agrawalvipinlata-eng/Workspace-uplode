@@ -152,6 +152,9 @@ class _AdminResultsScreenState extends ConsumerState<AdminResultsScreen> {
           StreamBuilder<List<Map<String, dynamic>>>(
               stream: ref.read(examResultServiceProvider).watchAll(),
               builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
+                if (snap.hasError)
+                  return NmbCard(
+                      child: Text('Results could not load: ${snap.error}'));
                 if (!snap.hasData)
                   return const Center(child: CircularProgressIndicator());
                 if (snap.data!.isEmpty)

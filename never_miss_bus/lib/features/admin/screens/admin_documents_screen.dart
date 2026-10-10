@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/nmb_colors.dart';
@@ -25,6 +28,8 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
   final TextEditingController _label = TextEditingController();
   String? _studentUid;
   bool _uploading = false;
+  Uint8List? _previewBytes;
+  String? _previewName;
 
   @override
   void dispose() {
@@ -39,16 +44,66 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
       _snack('Student और document name select करो.', error: true);
       return;
     }
-    final FilePickerResult? picked = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: <String>['pdf', 'jpg', 'jpeg', 'png', 'webp'],
-      allowMultiple: false,
-      withData: true,
+    final String? source = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (BuildContext sheet) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: const Text('Choose photo from album'),
+              subtitle: const Text('Original-quality JPG/PNG photo'),
+              onTap: () => Navigator.pop(sheet, 'gallery'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_rounded),
+              title: const Text('Take photo with camera'),
+              subtitle: const Text('High-quality camera capture'),
+              onTap: () => Navigator.pop(sheet, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.attach_file_rounded),
+              title: const Text('Choose PDF or image file'),
+              subtitle: const Text('PDF, JPG, JPEG, PNG or WEBP'),
+              onTap: () => Navigator.pop(sheet, 'file'),
+            ),
+          ],
+        ),
+      ),
     );
-    if (picked == null || picked.files.isEmpty || !mounted) return;
-    final PlatformFile file = picked.files.single;
+    if (source == null || !mounted) return;
+
+    PlatformFile? file;
+    if (source == 'file') {
+      final FilePickerResult? picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: <String>['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+        allowMultiple: false,
+        withData: true,
+      );
+      if (picked == null || picked.files.isEmpty || !mounted) return;
+      file = picked.files.single;
+    } else {
+      // No resizing and imageQuality 100: keep the original camera/gallery
+      // image. The 20 MB server/storage limit still prevents huge uploads.
+      final XFile? image = await ImagePicker().pickImage(
+        source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+        imageQuality: 100,
+      );
+      if (image == null || !mounted) return;
+      final Uint8List bytes = await image.readAsBytes();
+      file = PlatformFile(name: image.name, size: bytes.length, bytes: bytes);
+    }
+    await _uploadFile(file);
+  }
+
+  Future<void> _uploadFile(PlatformFile? file) async {
+    final String? uid = _studentUid;
+    final String label = _label.text.trim();
+    if (uid == null || label.isEmpty || file == null || !mounted) return;
     if (file.size > 20 * 1024 * 1024) {
-      _snack('File 20 MB से छोटी होनी चाहिए.', error: true);
+      _snack('Photo/file 20 MB से छोटी होनी चाहिए.', error: true);
       return;
     }
     if (file.bytes == null && (file.path == null || file.path!.isEmpty)) {
@@ -63,7 +118,11 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
             : extension == 'webp'
                 ? 'image/webp'
                 : 'image/jpeg';
-    setState(() => _uploading = true);
+    setState(() {
+      _previewBytes = file.bytes;
+      _previewName = file.name;
+      _uploading = true;
+    });
     final Result<void> result =
         await ref.read(documentVaultServiceProvider).upload(
               studentUid: uid,
@@ -76,7 +135,11 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
     result.when(
       ok: (_) {
         _label.clear();
-        _snack('Original document uploaded.', success: true);
+        setState(() {
+          _previewBytes = null;
+          _previewName = null;
+        });
+        _snack('Original-quality document uploaded.', success: true);
       },
       err: (AppFailure f) => _snack(f.message, error: true),
     );
@@ -115,7 +178,7 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                 style: NmbTypography.screenTitle),
             const SizedBox(height: 4),
             Text(
-              'Files are stored in private Cloud Storage without compression.',
+              'Upload original-quality photos from album or camera, or choose a PDF/image file.',
               style: NmbTypography.bodySecondary,
             ),
             const SizedBox(height: 16),
@@ -139,8 +202,11 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                           ),
                         ),
                     ],
-                    onChanged: (String? value) =>
-                        setState(() => _studentUid = value),
+                    onChanged: (String? value) => setState(() {
+                      _studentUid = value;
+                      _previewBytes = null;
+                      _previewName = null;
+                    }),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -151,6 +217,25 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                       prefixIcon: Icon(Icons.description_outlined),
                     ),
                   ),
+                  if (_previewBytes != null) ...<Widget>[
+                    const SizedBox(height: 14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.memory(
+                        _previewBytes!,
+                        height: 180,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const SizedBox(
+                          height: 80,
+                          child: Center(
+                              child: Icon(Icons.insert_drive_file_rounded)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Ready: ${_previewName ?? 'selected file'}',
+                        style: NmbTypography.caption),
+                  ],
                   const SizedBox(height: 14),
                   FilledButton.icon(
                     onPressed: _uploading ? null : _pickAndUpload,
@@ -159,9 +244,10 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.cloud_upload_rounded),
-                    label: Text(
-                        _uploading ? 'Uploading…' : 'Upload original file'),
+                        : const Icon(Icons.add_a_photo_rounded),
+                    label: Text(_uploading
+                        ? 'Uploading original…'
+                        : 'Choose photo / camera / PDF'),
                   ),
                 ],
               ),
@@ -174,6 +260,11 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                     .watchForStudent(selected.uid),
                 builder: (BuildContext context,
                     AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                  if (snapshot.hasError) {
+                    return NmbCard(
+                        child: Text(
+                            'Could not load documents: ${snapshot.error}'));
+                  }
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -235,10 +326,21 @@ class _DocumentTile extends StatelessWidget {
                       await service.resolveDownloadUrl(document);
                   if (!context.mounted) return;
                   result.when(
-                    ok: (String url) => launchUrl(
-                      Uri.parse(url),
-                      mode: LaunchMode.externalApplication,
-                    ),
+                    ok: (String url) async {
+                      if (image) {
+                        await showDialog<void>(
+                          context: context,
+                          builder: (_) => Dialog(
+                            child: InteractiveViewer(
+                              child: Image.network(url, fit: BoxFit.contain),
+                            ),
+                          ),
+                        );
+                      } else {
+                        await launchUrl(Uri.parse(url),
+                            mode: LaunchMode.externalApplication);
+                      }
+                    },
                     err: (AppFailure failure) => ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text(failure.message))),
                   );

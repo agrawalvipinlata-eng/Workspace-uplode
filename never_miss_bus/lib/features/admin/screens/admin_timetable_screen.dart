@@ -301,6 +301,8 @@ class _TeacherMatrix extends ConsumerWidget {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: ref.read(timetableServiceProvider).watchAll(),
       builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
+        if (snap.hasError)
+          return Center(child: Text('Timetable could not load: ${snap.error}'));
         final List<Map<String, dynamic>> rows =
             snap.data ?? const <Map<String, dynamic>>[];
         final Map<String, List<Map<String, dynamic>>> byTeacher =
