@@ -262,6 +262,16 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /timetable/{entryId} {
+      allow read: if isAdmin()
+        || ((isStudent() || isTeacher())
+            && resource.data.classSection == me().classSection);
+      allow create: if isAdmin()
+        || (isTeacher()
+            && request.resource.data.classSection == me().classSection);
+      allow update, delete: if isAdmin();
+    }
+
     // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()

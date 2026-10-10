@@ -23,6 +23,7 @@ class AdminShell extends ConsumerWidget {
     ('/admin/students', 'Students', Icons.school_rounded),
     ('/admin/documents', 'Documents', Icons.folder_copy_rounded),
     ('/admin/results', 'Exam Results', Icons.assessment_rounded),
+    ('/admin/timetable', 'Timetable', Icons.schedule_rounded),
     ('/admin/attendance', 'Attendance', Icons.fact_check_rounded),
     ('/admin/teachers', 'Class Teachers', Icons.co_present_rounded),
     ('/admin/drivers', 'Drivers', Icons.badge_rounded),

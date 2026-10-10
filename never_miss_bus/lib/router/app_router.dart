@@ -10,6 +10,7 @@ import '../features/admin/screens/admin_buses_screen.dart';
 import '../features/admin/screens/admin_dashboard_screen.dart';
 import '../features/admin/screens/admin_documents_screen.dart';
 import '../features/admin/screens/admin_results_screen.dart';
+import '../features/admin/screens/admin_timetable_screen.dart';
 import '../features/admin/screens/admin_drivers_screen.dart';
 import '../features/admin/screens/admin_monitoring_screen.dart';
 import '../features/admin/screens/admin_notifications_screen.dart';
@@ -39,6 +40,7 @@ import '../features/student/screens/student_map_screen.dart';
 import '../features/student/screens/student_modules_screen.dart';
 import '../features/student/screens/parent_dashboard_screen.dart';
 import '../features/student/screens/student_results_screen.dart';
+import '../features/student/screens/student_timetable_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
@@ -135,6 +137,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                   GoRoute(
                     path: 'results',
                     builder: (_, __) => const StudentResultsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'timetable',
+                    builder: (_, __) => const StudentTimetableScreen(),
                   ),
                 ],
               ),
@@ -289,6 +295,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/results',
             builder: (_, __) => const AdminResultsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/timetable',
+            builder: (_, __) => const AdminTimetableScreen(),
           ),
           GoRoute(
             path: '/admin/attendance',

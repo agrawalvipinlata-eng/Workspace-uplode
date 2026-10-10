@@ -21,6 +21,7 @@ import '../services/live_location_service.dart';
 import '../services/notification_service.dart';
 import '../services/schoolwork_service.dart';
 import '../services/remark_service.dart';
+import '../services/timetable_service.dart';
 
 /// ── Service singletons ────────────────────────────────────────────────
 final Provider<AuthService> authServiceProvider = Provider<AuthService>(
@@ -98,6 +99,11 @@ final Provider<DocumentVaultService> documentVaultServiceProvider =
 final Provider<ExamResultService> examResultServiceProvider =
     Provider<ExamResultService>(
   (Ref ref) => ExamResultService(FirebaseFirestore.instance),
+);
+
+final Provider<TimetableService> timetableServiceProvider =
+    Provider<TimetableService>(
+  (Ref ref) => TimetableService(FirebaseFirestore.instance),
 );
 
 final Provider<ConnectivityService> connectivityServiceProvider =

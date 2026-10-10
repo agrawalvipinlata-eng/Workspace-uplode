@@ -24,6 +24,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
           Icons.dashboard_rounded, '/student/home/parent-dashboard'),
       _ModuleItem('Exam & Result', 'Marks, grades and percentage',
           Icons.assessment_rounded, '/student/home/results'),
+      _ModuleItem('Timetable', 'Weekly class periods', Icons.schedule_rounded,
+          '/student/home/timetable'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',
