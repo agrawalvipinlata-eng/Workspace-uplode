@@ -106,6 +106,7 @@ class _AdminBulkActionsScreenState
         title: Text(_classSection == null ? 'Bulk Actions' : _classSection!),
       ),
       body: ResponsiveBody(
+          scrollable: false,
           child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               child: _classSection == null

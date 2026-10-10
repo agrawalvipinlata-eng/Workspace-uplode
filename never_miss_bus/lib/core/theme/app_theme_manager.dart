@@ -116,6 +116,8 @@ class AppThemeManager {
       useMaterial3: true,
       brightness: dark ? Brightness.dark : Brightness.light,
       colorScheme: scheme,
+      fontFamily: 'Roboto',
+      visualDensity: VisualDensity.adaptivePlatformDensity,
       scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
         backgroundColor: background,
@@ -137,6 +139,56 @@ class AppThemeManager {
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      dividerTheme: DividerThemeData(
+        color:
+            dark ? Colors.white.withOpacity(0.10) : t.primary.withOpacity(0.10),
+        thickness: 1,
+        space: 1,
+      ),
+      drawerTheme: DrawerThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+        ),
+      ),
+      dialogTheme: DialogTheme(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titleTextStyle:
+            TextStyle(color: text, fontSize: 20, fontWeight: FontWeight.w800),
+        contentTextStyle: TextStyle(color: muted, fontSize: 14, height: 1.45),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: t.primary.withOpacity(0.08),
+        selectedColor: t.primary.withOpacity(0.16),
+        labelStyle:
+            TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        side: BorderSide.none,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: t.primary,
+        linearTrackColor: t.primary.withOpacity(0.10),
+        circularTrackColor: t.primary.withOpacity(0.10),
+      ),
+      listTileTheme: ListTileThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        iconColor: t.primary,
+        textColor: text,
+        subtitleTextStyle: TextStyle(color: muted, fontSize: 13),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

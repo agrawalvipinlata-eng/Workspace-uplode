@@ -21,13 +21,16 @@ class ResponsiveBody extends StatelessWidget {
       child: ConstrainedBox(
         constraints:
             const BoxConstraints(maxWidth: NmbConstants.maxContentWidth),
-        child: Padding(
-          padding: padding ??
-              const EdgeInsets.symmetric(
-                horizontal: NmbConstants.screenPadding,
-                vertical: 12,
-              ),
-          child: child,
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: padding ??
+                const EdgeInsets.symmetric(
+                  horizontal: NmbConstants.screenPadding,
+                  vertical: 12,
+                ),
+            child: child,
+          ),
         ),
       ),
     );

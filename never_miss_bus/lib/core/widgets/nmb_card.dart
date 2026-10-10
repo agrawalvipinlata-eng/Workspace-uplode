@@ -9,31 +9,35 @@ class NmbCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(18),
-    this.color = NmbColors.surface,
+    this.color,
     this.onTap,
     this.borderColor,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final Color color;
+  final Color? color;
   final VoidCallback? onTap;
   final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Color cardColor = color ?? theme.colorScheme.surface;
     final Widget card = Container(
       decoration: BoxDecoration(
-        color: color,
+        color: cardColor,
         borderRadius: BorderRadius.circular(NmbTheme.radiusCard),
         border: borderColor != null
             ? Border.all(color: borderColor!, width: 1.2)
             : null,
-        boxShadow: const <BoxShadow>[
+        boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Color(0x0D17233B),
-            blurRadius: 18,
-            offset: Offset(0, 6),
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withOpacity(0.24)
+                : const Color(0x0D17233B),
+            blurRadius: theme.brightness == Brightness.dark ? 12 : 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),

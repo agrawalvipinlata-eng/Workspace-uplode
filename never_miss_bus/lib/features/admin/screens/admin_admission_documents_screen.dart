@@ -89,6 +89,7 @@ class _AdminAdmissionDocumentsScreenState
             : _classSection ?? 'Admission Documents'),
       ),
       body: ResponsiveBody(
+          scrollable: false,
           child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               child: _studentUid != null && selected != null

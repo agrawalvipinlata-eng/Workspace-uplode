@@ -104,13 +104,38 @@ class AdminShell extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   child: NmbGradientHeader(
-                    title: 'Never Miss Bus',
-                    subtitle: 'Admin Console',
+                    title: 'SRBS International',
+                    subtitle: 'Never Miss Bus • Admin Console',
                     icon: Icons.directions_bus_rounded,
                     trailing: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       color: Colors.white,
                       icon: const Icon(Icons.close_rounded),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: NmbColors.primarySoft,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.admin_panel_settings_rounded, color: NmbColors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              const Text('Admin workspace', style: TextStyle(fontWeight: FontWeight.w800)),
+                              Text('Manage school operations', style: NmbTypography.caption),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -130,6 +155,7 @@ class AdminShell extends ConsumerWidget {
                           ),
                           selected: location.startsWith(path),
                           selectedTileColor: NmbColors.primarySoft,
+                          selectedColor: NmbColors.primary,
                           leading: Icon(icon),
                           title: Text(
                             label,
