@@ -1,7 +1,7 @@
 name: never_miss_bus
 description: "Never Miss Bus — secure school bus live tracking for SRBS International School."
 publish_to: "none"
-version: 1.0.0+36
+version: 1.0.0+37
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -23,6 +23,7 @@ dependencies:
   cloud_firestore: ^5.4.4
   firebase_database: ^11.1.4
   firebase_messaging: ^15.1.3
+  firebase_storage: ^12.3.3
 
   # Maps & location — flutter_map uses OpenStreetMap: 100% free,
   # NO API key, NO billing/card required.

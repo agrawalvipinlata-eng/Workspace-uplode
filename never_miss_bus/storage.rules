@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myProfile() {
+      return firestore.get(
+        /databases/(default)/documents/users/$(request.auth.uid)
+      ).data;
+    }
+
+    function isAdmin() {
+      return signedIn() && myProfile().role == 'admin'
+        && myProfile().isActive == true;
+    }
+
+    // Original files are kept as uploaded. The app never recompresses them.
+    // A per-file limit prevents accidental giant uploads on the free tier.
+    match /studentDocuments/{uid}/{fileName} {
+      allow read: if signedIn()
+        && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin()
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'image/webp'
+        ];
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

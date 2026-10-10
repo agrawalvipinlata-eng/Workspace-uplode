@@ -20,6 +20,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
 
   static const List<_ModuleGroup> _groups = <_ModuleGroup>[
     _ModuleGroup('Academic', Icons.school_rounded, <_ModuleItem>[
+      _ModuleItem('Parent dashboard', 'Attendance, fees and updates',
+          Icons.dashboard_rounded, '/student/home/parent-dashboard'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',
