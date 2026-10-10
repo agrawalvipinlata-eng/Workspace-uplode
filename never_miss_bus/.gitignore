@@ -53,4 +53,4 @@ android/key.properties
 *.jks
 
 # Firebase Functions dependencies
-never_miss_bus/firebase/functions/node_modules/
+firebase/functions/node_modules/
