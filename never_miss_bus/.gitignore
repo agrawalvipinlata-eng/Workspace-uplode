@@ -51,3 +51,6 @@ lib/firebase_options.dart.generated
 android/key.properties
 *.keystore
 *.jks
+
+# Firebase Functions dependencies
+never_miss_bus/firebase/functions/node_modules/
