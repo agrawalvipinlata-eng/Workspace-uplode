@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/responsive_scaffold_body.dart';
+import '../../../core/widgets/nmb_visuals.dart';
+import '../../../core/theme/nmb_colors.dart';
+import '../../../core/theme/nmb_typography.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
@@ -81,9 +84,27 @@ class _AdminResultsScreenState extends ConsumerState<AdminResultsScreen> {
         appBar: AppBar(title: const Text('Exam & Results')),
         body: ResponsiveBody(
             child: ListView(children: <Widget>[
-          const Text('Publish result',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 14),
+          const NmbGradientHeader(
+              title: 'Result Management',
+              subtitle: 'Publish marks and keep every class on track',
+              icon: Icons.assessment_rounded),
+          const SizedBox(height: 16),
+          Row(children: <Widget>[
+            NmbMetricTile(
+                value: '${students.length}',
+                label: 'Students',
+                icon: Icons.groups_rounded,
+                color: NmbColors.info),
+            const SizedBox(width: 10),
+            const NmbMetricTile(
+                value: 'Live',
+                label: 'Publishing',
+                icon: Icons.bolt_rounded,
+                color: NmbColors.success),
+          ]),
+          const SizedBox(height: 18),
+          Text('Publish result', style: NmbTypography.sectionTitle),
+          const SizedBox(height: 10),
           NmbCard(
               child: Column(children: <Widget>[
             DropdownButtonFormField<String>(

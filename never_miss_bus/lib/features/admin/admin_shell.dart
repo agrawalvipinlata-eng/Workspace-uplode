@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/nmb_colors.dart';
 import '../../core/theme/nmb_typography.dart';
 import '../../core/widgets/nmb_dialogs.dart';
+import '../../core/widgets/nmb_visuals.dart';
 import '../../core/widgets/state_views.dart';
 import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
@@ -101,38 +102,16 @@ class AdminShell extends ConsumerWidget {
             child: Column(
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: NmbColors.primary,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.directions_bus_rounded,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'Never Miss Bus',
-                              style: NmbTypography.sectionTitle,
-                            ),
-                            Text(
-                              'Admin Console',
-                              style: NmbTypography.caption,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                  child: NmbGradientHeader(
+                    title: 'Never Miss Bus',
+                    subtitle: 'Admin Console',
+                    icon: Icons.directions_bus_rounded,
+                    trailing: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: Colors.white,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
                   ),
                 ),
                 const Divider(),

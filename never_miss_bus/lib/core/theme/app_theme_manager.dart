@@ -100,6 +100,12 @@ class AppThemeManager {
   /// ThemeData current theme colors ke saath.
   static ThemeData themeData({bool dark = false}) {
     final AppThemeOption t = current.value;
+    final Color background =
+        dark ? const Color(0xFF111827) : const Color(0xFFF7F9FC);
+    final Color surface = dark ? const Color(0xFF182235) : Colors.white;
+    final Color text = dark ? Colors.white : const Color(0xFF17233B);
+    final Color muted =
+        dark ? const Color(0xFFB8C2D4) : const Color(0xFF647087);
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: t.primary,
       primary: t.primary,
@@ -110,33 +116,86 @@ class AppThemeManager {
       useMaterial3: true,
       brightness: dark ? Brightness.dark : Brightness.light,
       colorScheme: scheme,
-      scaffoldBackgroundColor:
-          dark ? const Color(0xFF101522) : const Color(0xFFF6F8FC),
+      scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
-        backgroundColor:
-            dark ? const Color(0xFF101522) : const Color(0xFFF6F8FC),
-        foregroundColor: dark ? Colors.white : const Color(0xFF17233B),
+        backgroundColor: background,
+        foregroundColor: text,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: dark ? Colors.white : const Color(0xFF17233B),
+          fontSize: 21,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.2,
+          color: text,
         ),
+      ),
+      cardTheme: CardTheme(
+        color: surface,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           backgroundColor: t.primary,
+          foregroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(15),
           ),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          foregroundColor: t.primary,
+          side: BorderSide(color: t.primary.withOpacity(0.35)),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surface,
+        hintStyle: TextStyle(color: muted, fontSize: 14),
+        labelStyle: TextStyle(color: muted, fontSize: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: t.primary.withOpacity(0.12)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: t.primary.withOpacity(0.12)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: t.primary, width: 1.8),
+        ),
+      ),
+      tabBarTheme: TabBarTheme(
+        labelColor: t.primary,
+        unselectedLabelColor: muted,
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+        unselectedLabelStyle:
+            const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        indicatorColor: t.primary,
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: t.primary.withOpacity(0.08),
+      ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: surface,
         indicatorColor: t.primary.withOpacity(0.15),
         height: 68,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: muted),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
