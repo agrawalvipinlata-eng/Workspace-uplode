@@ -22,6 +22,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
     _ModuleGroup('Academic', Icons.school_rounded, <_ModuleItem>[
       _ModuleItem('Parent dashboard', 'Attendance, fees and updates',
           Icons.dashboard_rounded, '/student/home/parent-dashboard'),
+      _ModuleItem('Exam & Result', 'Marks, grades and percentage',
+          Icons.assessment_rounded, '/student/home/results'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',

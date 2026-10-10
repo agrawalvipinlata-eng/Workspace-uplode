@@ -251,6 +251,17 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Exam results: students read only their own records; staff publishes.
+    match /examResults/{resultId} {
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.studentUid == request.auth.uid)
+        || (isTeacher() && resource.data.classSection == me().classSection);
+      allow create: if isAdmin()
+        || (isTeacher()
+            && request.resource.data.classSection == me().classSection);
+      allow update, delete: if isAdmin();
+    }
+
     // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()

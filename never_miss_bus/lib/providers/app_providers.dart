@@ -14,6 +14,7 @@ import '../services/connectivity_service.dart';
 import '../services/device_session_service.dart';
 import '../services/document_vault_service.dart';
 import '../services/driver_trip_service.dart';
+import '../services/exam_result_service.dart';
 import '../services/eta_service.dart';
 import '../services/firestore_service.dart';
 import '../services/live_location_service.dart';
@@ -92,6 +93,11 @@ final Provider<DocumentVaultService> documentVaultServiceProvider =
     FirebaseFirestore.instance,
     FirebaseStorage.instance,
   ),
+);
+
+final Provider<ExamResultService> examResultServiceProvider =
+    Provider<ExamResultService>(
+  (Ref ref) => ExamResultService(FirebaseFirestore.instance),
 );
 
 final Provider<ConnectivityService> connectivityServiceProvider =

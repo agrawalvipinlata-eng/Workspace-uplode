@@ -9,6 +9,7 @@ import '../features/admin/screens/admin_error_reports_screen.dart';
 import '../features/admin/screens/admin_buses_screen.dart';
 import '../features/admin/screens/admin_dashboard_screen.dart';
 import '../features/admin/screens/admin_documents_screen.dart';
+import '../features/admin/screens/admin_results_screen.dart';
 import '../features/admin/screens/admin_drivers_screen.dart';
 import '../features/admin/screens/admin_monitoring_screen.dart';
 import '../features/admin/screens/admin_notifications_screen.dart';
@@ -37,6 +38,7 @@ import '../features/student/screens/student_home_screen.dart';
 import '../features/student/screens/student_map_screen.dart';
 import '../features/student/screens/student_modules_screen.dart';
 import '../features/student/screens/parent_dashboard_screen.dart';
+import '../features/student/screens/student_results_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
@@ -129,6 +131,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                   GoRoute(
                     path: 'parent-dashboard',
                     builder: (_, __) => const ParentDashboardScreen(),
+                  ),
+                  GoRoute(
+                    path: 'results',
+                    builder: (_, __) => const StudentResultsScreen(),
                   ),
                 ],
               ),
@@ -279,6 +285,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/documents',
             builder: (_, __) => const AdminDocumentsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/results',
+            builder: (_, __) => const AdminResultsScreen(),
           ),
           GoRoute(
             path: '/admin/attendance',
