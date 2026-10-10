@@ -32,6 +32,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
           Icons.receipt_long_rounded, '/student/home/fees'),
       _ModuleItem('My Progress', 'Attendance, results and feedback',
           Icons.insights_rounded, '/student/home/progress'),
+      _ModuleItem('My Documents', 'Certificates and school records',
+          Icons.folder_copy_rounded, '/student/home/documents'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',
