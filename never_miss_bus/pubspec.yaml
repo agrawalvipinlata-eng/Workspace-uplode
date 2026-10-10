@@ -43,6 +43,7 @@ dependencies:
   url_launcher: ^6.3.0
   video_player: ^2.9.2
   intl: ^0.19.0
+  http: ^1.2.2
   cupertino_icons: ^1.0.8
 
 # Pins for Flutter 3.24.x compatibility: newer geolocator_android builds

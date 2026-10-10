@@ -5,11 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_language.dart';
 import '../../../core/theme/nmb_colors.dart';
 import '../../../core/theme/nmb_typography.dart';
+import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
+import '../../../services/document_vault_service.dart';
 
 class StudentDocumentsScreen extends ConsumerWidget {
   const StudentDocumentsScreen({super.key});
@@ -51,7 +53,10 @@ class StudentDocumentsScreen extends ConsumerWidget {
                   style: NmbTypography.bodySecondary),
               const SizedBox(height: 16),
               for (final Map<String, dynamic> document in documents)
-                _DocumentCard(document: document),
+                _DocumentCard(
+                  document: document,
+                  service: ref.read(documentVaultServiceProvider),
+                ),
             ],
           );
         },
@@ -61,13 +66,14 @@ class StudentDocumentsScreen extends ConsumerWidget {
 }
 
 class _DocumentCard extends StatelessWidget {
-  const _DocumentCard({required this.document});
+  const _DocumentCard({required this.document, required this.service});
   final Map<String, dynamic> document;
+  final DocumentVaultService service;
 
   @override
   Widget build(BuildContext context) {
     final String type = '${document['contentType'] ?? ''}';
-    final String url = '${document['downloadUrl'] ?? ''}';
+    final String storedUrl = '${document['downloadUrl'] ?? ''}';
     final bool image = type.startsWith('image/');
     return NmbCard(
       padding: const EdgeInsets.all(12),
@@ -96,12 +102,12 @@ class _DocumentCard extends StatelessWidget {
             Icon(Icons.verified_rounded, color: NmbColors.success),
           ]),
           const SizedBox(height: 10),
-          if (image && url.isNotEmpty)
+          if (image && storedUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: AspectRatio(
                 aspectRatio: 1.6,
-                child: Image.network(url,
+                child: Image.network(storedUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
                         const Center(child: Icon(Icons.broken_image_outlined))),
@@ -109,9 +115,22 @@ class _DocumentCard extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: url.isEmpty
+            onPressed: (storedUrl.isEmpty && document['objectKey'] == null)
                 ? null
                 : () async {
+                    final Result<String> result =
+                        await service.resolveDownloadUrl(document);
+                    if (!context.mounted) return;
+                    final String? url = result.when(
+                      ok: (String value) => value,
+                      err: (AppFailure failure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(failure.message)),
+                        );
+                        return null;
+                      },
+                    );
+                    if (url == null || url.isEmpty) return;
                     if (image) {
                       await showDialog<void>(
                           context: context,

@@ -94,6 +94,7 @@ final Provider<DocumentVaultService> documentVaultServiceProvider =
   (Ref ref) => DocumentVaultService(
     FirebaseFirestore.instance,
     FirebaseStorage.instance,
+    FirebaseAuth.instance,
   ),
 );
 

@@ -11,6 +11,7 @@ import '../../../core/widgets/responsive_scaffold_body.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/data_providers.dart';
+import '../../../services/document_vault_service.dart';
 
 class AdminDocumentsScreen extends ConsumerStatefulWidget {
   const AdminDocumentsScreen({super.key});
@@ -189,7 +190,10 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
                           style: NmbTypography.sectionTitle),
                       const SizedBox(height: 8),
                       for (final Map<String, dynamic> doc in docs)
-                        _DocumentTile(document: doc),
+                        _DocumentTile(
+                          document: doc,
+                          service: ref.read(documentVaultServiceProvider),
+                        ),
                     ],
                   );
                 },
@@ -202,13 +206,13 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
 }
 
 class _DocumentTile extends StatelessWidget {
-  const _DocumentTile({required this.document});
+  const _DocumentTile({required this.document, required this.service});
   final Map<String, dynamic> document;
+  final DocumentVaultService service;
 
   @override
   Widget build(BuildContext context) {
     final String type = '${document['contentType'] ?? ''}';
-    final String url = '${document['downloadUrl'] ?? ''}';
     final bool image = type.startsWith('image/');
     return NmbCard(
       padding: const EdgeInsets.all(12),
@@ -223,12 +227,22 @@ class _DocumentTile extends StatelessWidget {
         trailing: IconButton(
           tooltip: 'View document',
           icon: const Icon(Icons.visibility_rounded),
-          onPressed: url.isEmpty
+          onPressed: (document['downloadUrl'] == null &&
+                  document['objectKey'] == null)
               ? null
-              : () => launchUrl(
-                    Uri.parse(url),
-                    mode: LaunchMode.externalApplication,
-                  ),
+              : () async {
+                  final Result<String> result =
+                      await service.resolveDownloadUrl(document);
+                  if (!context.mounted) return;
+                  result.when(
+                    ok: (String url) => launchUrl(
+                      Uri.parse(url),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    err: (AppFailure failure) => ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(failure.message))),
+                  );
+                },
         ),
       ),
     );

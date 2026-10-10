@@ -1,0 +1,17 @@
+name = "srbs-school-documents"
+main = "src/index.ts"
+compatibility_date = "2026-10-10"
+
+[[r2_buckets]]
+binding = "DOCUMENTS"
+bucket_name = "srbs-school-documents"
+
+[vars]
+FIREBASE_PROJECT_ID = "YOUR_FIREBASE_PROJECT_ID"
+# Comma-separated Firebase Auth UIDs allowed to upload/delete.
+ADMIN_UIDS = "YOUR_ADMIN_UID"
+# Used only to build capability URLs returned to the app.
+PUBLIC_WORKER_URL = "https://YOUR_WORKER_SUBDOMAIN.workers.dev"
+
+# Set this as a secret, never commit it:
+# wrangler secret put CAPABILITY_SECRET
