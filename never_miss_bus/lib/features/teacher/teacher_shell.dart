@@ -75,6 +75,11 @@ class TeacherShell extends ConsumerWidget {
               selectedIcon: const Icon(Icons.menu_book_rounded),
               label: tr('Class work', 'क्लास वर्क'),
             ),
+            NavigationDestination(
+              icon: const Icon(Icons.calendar_month_outlined),
+              selectedIcon: const Icon(Icons.calendar_month_rounded),
+              label: tr('Timetable', 'टाइमटेबल'),
+            ),
           ],
         ),
       ),

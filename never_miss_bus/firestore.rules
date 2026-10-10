@@ -277,11 +277,18 @@ service cloud.firestore {
 
     match /timetable/{entryId} {
       allow read: if isAdmin()
-        || ((isStudent() || isTeacher())
-            && resource.data.classSection == me().classSection);
-      allow create: if isAdmin()
+        || (isStudent()
+            && (!('entryType' in resource.data)
+                || resource.data.entryType == 'class')
+            && resource.data.classSection == me().classSection)
         || (isTeacher()
-            && request.resource.data.classSection == me().classSection);
+            && (resource.data.teacherUid == request.auth.uid
+                || resource.data.classSection == me().classSection));
+      allow create: if isAdmin()
+        && request.resource.data.entryType in ['class', 'lunchDuty']
+        && request.resource.data.teacherUid is string
+        && request.resource.data.teacher is string
+        && request.resource.data.day is string;
       allow update, delete: if isAdmin();
     }
 
