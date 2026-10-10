@@ -24,8 +24,7 @@ class StudentSettingsScreen extends ConsumerStatefulWidget {
       _StudentSettingsScreenState();
 }
 
-class _StudentSettingsScreenState
-    extends ConsumerState<StudentSettingsScreen> {
+class _StudentSettingsScreenState extends ConsumerState<StudentSettingsScreen> {
   bool _tripAlerts = true;
   bool _approachingAlerts = true;
   bool _announcementAlerts = true;
@@ -59,7 +58,9 @@ class _StudentSettingsScreenState
           'addressSelf': _selfAddress.text.trim(),
       },
     );
-    if (mounted) showNmbSnack(context, tr('Settings saved ✓', 'सेटिंग्स सेव ✓'), isSuccess: true);
+    if (mounted)
+      showNmbSnack(context, tr('Settings saved ✓', 'सेटिंग्स सेव ✓'),
+          isSuccess: true);
   }
 
   Future<void> _requestNotifPermission() async {
@@ -104,8 +105,10 @@ class _StudentSettingsScreenState
                   children: <Widget>[
                     const Row(
                       children: <Widget>[
-                        Icon(Icons.notifications_off_rounded,
-                            color: NmbColors.warning,),
+                        Icon(
+                          Icons.notifications_off_rounded,
+                          color: NmbColors.warning,
+                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -126,19 +129,22 @@ class _StudentSettingsScreenState
               ),
               const SizedBox(height: 14),
             ],
-            const Text('Notification preferences',
-                style: NmbTypography.sectionTitle,),
+            const Text(
+              'Notification preferences',
+              style: NmbTypography.sectionTitle,
+            ),
             const SizedBox(height: 10),
             NmbCard(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 4,),
+                horizontal: 12,
+                vertical: 4,
+              ),
               child: Column(
                 children: <Widget>[
                   SwitchListTile(
                     title: const Text('Trip started / ended'),
                     value: _tripAlerts,
-                    onChanged: (bool v) =>
-                        setState(() => _tripAlerts = v),
+                    onChanged: (bool v) => setState(() => _tripAlerts = v),
                   ),
                   SwitchListTile(
                     title: const Text('Bus approaching my stop'),
@@ -164,20 +170,20 @@ class _StudentSettingsScreenState
             const Text('Language / भाषा', style: NmbTypography.sectionTitle),
             const SizedBox(height: 10),
             NmbCard(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               child: Row(
                 children: <Widget>[
-                  Icon(Icons.translate_rounded,
-                      color: NmbColors.primary,),
+                  Icon(
+                    Icons.translate_rounded,
+                    color: NmbColors.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(child: Text(tr('App language', 'ऐप की भाषा'))),
                   TextButton(
                     onPressed: () async {
                       final SharedPreferences prefs =
                           await SharedPreferences.getInstance();
-                      final String cur =
-                          prefs.getString('nmb_lang') ?? 'en';
+                      final String cur = prefs.getString('nmb_lang') ?? 'en';
                       final String next = cur == 'en' ? 'hi' : 'en';
                       await prefs.setString('nmb_lang', next);
                       // INSTANT: global notifier update — poori app me
@@ -199,7 +205,8 @@ class _StudentSettingsScreenState
                       builder: (_, String lang, __) => Text(
                         lang == 'hi' ? 'हिंदी → EN' : 'EN → हिंदी',
                         style: const TextStyle(
-                            fontWeight: FontWeight.w700,),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -216,34 +223,40 @@ class _StudentSettingsScreenState
                 builder: (BuildContext ctx, AppThemeOption cur, _) {
                   return Column(
                     children: <Widget>[
-                      for (final AppThemeOption t
-                          in AppThemeManager.themes)
+                      for (final AppThemeOption t in AppThemeManager.themes)
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: Container(
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: <Color>[
-                                t.primaryDark,
-                                t.primary,
-                              ],),
+                              gradient: LinearGradient(
+                                colors: <Color>[
+                                  t.primaryDark,
+                                  t.primary,
+                                ],
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Text(t.emoji,
-                                  style: const TextStyle(fontSize: 18),),
+                              child: Text(
+                                t.emoji,
+                                style: const TextStyle(fontSize: 18),
+                              ),
                             ),
                           ),
                           title: Text(
                             appLanguage.value == 'hi' ? t.nameHi : t.name,
                           ),
                           trailing: cur.id == t.id
-                              ? Icon(Icons.check_circle_rounded,
-                                  color: t.primary,)
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: t.primary,
+                                )
                               : const Icon(
                                   Icons.radio_button_unchecked_rounded,
-                                  color: NmbColors.textTertiary,),
+                                  color: NmbColors.textTertiary,
+                                ),
                           onTap: () => AppThemeManager.set(t.id),
                         ),
                     ],
@@ -251,9 +264,32 @@ class _StudentSettingsScreenState
                 },
               ),
             ),
+            const SizedBox(height: 10),
+            NmbCard(
+              padding: EdgeInsets.zero,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: AppThemeManager.darkMode,
+                builder: (BuildContext context, bool dark, Widget? _) =>
+                    SwitchListTile.adaptive(
+                  value: dark,
+                  onChanged: AppThemeManager.setDarkMode,
+                  secondary: Icon(
+                    dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                    color: NmbColors.primary,
+                  ),
+                  title: Text(tr('Dark Mode', 'डार्क मोड')),
+                  subtitle: Text(
+                    tr('Comfortable dark appearance',
+                        'आंखों के लिए आरामदायक डार्क स्क्रीन'),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
-            const Text('My Contact Info (self-update)',
-                style: NmbTypography.sectionTitle,),
+            const Text(
+              'My Contact Info (self-update)',
+              style: NmbTypography.sectionTitle,
+            ),
             const SizedBox(height: 10),
             NmbCard(
               child: Column(
@@ -293,11 +329,14 @@ class _StudentSettingsScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                        tr('Change my password', 'पासवर्ड बदलें'),
-                        style: NmbTypography.cardTitle,),
+                      tr('Change my password', 'पासवर्ड बदलें'),
+                      style: NmbTypography.cardTitle,
+                    ),
                   ),
-                  const Icon(Icons.chevron_right_rounded,
-                      color: NmbColors.textTertiary,),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: NmbColors.textTertiary,
+                  ),
                 ],
               ),
             ),
@@ -307,16 +346,21 @@ class _StudentSettingsScreenState
               onTap: () => context.go('/student/profile/privacy'),
               child: Row(
                 children: <Widget>[
-                  const Icon(Icons.privacy_tip_rounded,
-                      color: NmbColors.info,),
+                  const Icon(
+                    Icons.privacy_tip_rounded,
+                    color: NmbColors.info,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                        tr('Privacy Policy', 'गोपनीयता नीति'),
-                        style: NmbTypography.cardTitle,),
+                      tr('Privacy Policy', 'गोपनीयता नीति'),
+                      style: NmbTypography.cardTitle,
+                    ),
                   ),
-                  const Icon(Icons.chevron_right_rounded,
-                      color: NmbColors.textTertiary,),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: NmbColors.textTertiary,
+                  ),
                 ],
               ),
             ),

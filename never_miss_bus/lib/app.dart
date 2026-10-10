@@ -145,8 +145,7 @@ class _NeverMissBusAppState extends ConsumerState<NeverMissBusApp>
   Widget build(BuildContext context) {
     final GoRouter router = ref.watch(appRouterProvider);
 
-    ref.listen(sessionProvider,
-        (Object? prev, AsyncValue<AuthSession?>? next) {
+    ref.listen(sessionProvider, (Object? prev, AsyncValue<AuthSession?>? next) {
       final AuthSession? session = next?.valueOrNull;
       if (session != null) {
         _registerDevice(session);
@@ -168,13 +167,20 @@ class _NeverMissBusAppState extends ConsumerState<NeverMissBusApp>
         return ValueListenableBuilder<AppThemeOption>(
           valueListenable: AppThemeManager.current,
           builder: (BuildContext context, AppThemeOption t, Widget? __) {
-            return MaterialApp.router(
-              key: ValueKey<String>('app_${lang}_${t.id}'),
-              title: NmbConstants.appName,
-              debugShowCheckedModeBanner: false,
-              scaffoldMessengerKey: rootMessengerKey,
-              theme: AppThemeManager.themeData(),
-              routerConfig: router,
+            return ValueListenableBuilder<bool>(
+              valueListenable: AppThemeManager.darkMode,
+              builder: (BuildContext context, bool dark, Widget? ___) {
+                return MaterialApp.router(
+                  key: ValueKey<String>('app_${lang}_${t.id}_$dark'),
+                  title: NmbConstants.appName,
+                  debugShowCheckedModeBanner: false,
+                  scaffoldMessengerKey: rootMessengerKey,
+                  theme: AppThemeManager.themeData(),
+                  darkTheme: AppThemeManager.themeData(dark: true),
+                  themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+                  routerConfig: router,
+                );
+              },
             );
           },
         );

@@ -65,6 +65,7 @@ class AppThemeManager {
 
   static final ValueNotifier<AppThemeOption> current =
       ValueNotifier<AppThemeOption>(themes.first);
+  static final ValueNotifier<bool> darkMode = ValueNotifier<bool>(false);
 
   static AppThemeOption byId(String id) => themes.firstWhere(
         (AppThemeOption t) => t.id == id,
@@ -76,6 +77,7 @@ class AppThemeManager {
       final SharedPreferences p = await SharedPreferences.getInstance();
       final String? id = p.getString('nmb_theme');
       if (id != null) current.value = byId(id);
+      darkMode.value = p.getBool('nmb_dark_mode') ?? false;
     } catch (_) {}
   }
 
@@ -87,27 +89,39 @@ class AppThemeManager {
     } catch (_) {}
   }
 
+  static Future<void> setDarkMode(bool enabled) async {
+    darkMode.value = enabled;
+    try {
+      final SharedPreferences p = await SharedPreferences.getInstance();
+      await p.setBool('nmb_dark_mode', enabled);
+    } catch (_) {}
+  }
+
   /// ThemeData current theme colors ke saath.
-  static ThemeData themeData() {
+  static ThemeData themeData({bool dark = false}) {
     final AppThemeOption t = current.value;
     final ColorScheme scheme = ColorScheme.fromSeed(
       seedColor: t.primary,
       primary: t.primary,
       secondary: t.accent,
+      brightness: dark ? Brightness.dark : Brightness.light,
     );
     return ThemeData(
       useMaterial3: true,
+      brightness: dark ? Brightness.dark : Brightness.light,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFFF6F8FC),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF6F8FC),
-        foregroundColor: Color(0xFF17233B),
+      scaffoldBackgroundColor:
+          dark ? const Color(0xFF101522) : const Color(0xFFF6F8FC),
+      appBarTheme: AppBarTheme(
+        backgroundColor:
+            dark ? const Color(0xFF101522) : const Color(0xFFF6F8FC),
+        foregroundColor: dark ? Colors.white : const Color(0xFF17233B),
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF17233B),
+          color: dark ? Colors.white : const Color(0xFF17233B),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
