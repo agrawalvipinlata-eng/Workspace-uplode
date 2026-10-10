@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants/nmb_constants.dart';
 
-/// Constrains content width on large screens and applies standard padding —
-/// keeps layouts responsive without hard-coded dimensions in screens.
+/// Constrains content width on large screens and applies standard padding.
+/// Non-scrollable mode deliberately fills the viewport so child ListViews and
+/// Expanded widgets receive finite Android phone constraints.
 class ResponsiveBody extends StatelessWidget {
   const ResponsiveBody({
     super.key,
@@ -17,29 +18,33 @@ class ResponsiveBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget constrained = Center(
+    final Widget padded = Padding(
+      padding: padding ??
+          const EdgeInsets.symmetric(
+            horizontal: NmbConstants.screenPadding,
+            vertical: 12,
+          ),
+      child: child,
+    );
+    final Widget content = Center(
       child: ConstrainedBox(
         constraints:
             const BoxConstraints(maxWidth: NmbConstants.maxContentWidth),
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(
-            padding: padding ??
-                const EdgeInsets.symmetric(
-                  horizontal: NmbConstants.screenPadding,
-                  vertical: 12,
-                ),
-            child: child,
-          ),
-        ),
+        child: scrollable
+            ? padded
+            : SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: padded,
+              ),
       ),
     );
 
-    if (!scrollable) return SafeArea(child: constrained);
+    if (!scrollable) return SafeArea(child: content);
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: constrained,
+        child: content,
       ),
     );
   }

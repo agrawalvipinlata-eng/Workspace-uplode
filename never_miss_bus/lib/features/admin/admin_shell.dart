@@ -105,7 +105,7 @@ class AdminShell extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   child: NmbGradientHeader(
                     title: 'SRBS International',
-                    subtitle: 'Never Miss Bus • Admin Console',
+                    subtitle: 'Never Miss Bus • Admin Console • Android build 53',
                     icon: Icons.directions_bus_rounded,
                     trailing: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
