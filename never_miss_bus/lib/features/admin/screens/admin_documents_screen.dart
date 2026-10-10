@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,11 +41,19 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
     final FilePickerResult? picked = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: <String>['pdf', 'jpg', 'jpeg', 'png', 'webp'],
-      withData: false,
+      allowMultiple: false,
+      withData: true,
     );
-    final String? path = picked?.files.single.path;
-    if (path == null || !mounted) return;
-    final PlatformFile file = picked!.files.single;
+    if (picked == null || picked.files.isEmpty || !mounted) return;
+    final PlatformFile file = picked.files.single;
+    if (file.size > 20 * 1024 * 1024) {
+      _snack('File 20 MB से छोटी होनी चाहिए.', error: true);
+      return;
+    }
+    if (file.bytes == null && (file.path == null || file.path!.isEmpty)) {
+      _snack('File data नहीं मिली। Document फिर से select करें.', error: true);
+      return;
+    }
     final String extension = (file.extension ?? '').toLowerCase();
     final String contentType = extension == 'pdf'
         ? 'application/pdf'
@@ -61,7 +67,7 @@ class _AdminDocumentsScreenState extends ConsumerState<AdminDocumentsScreen> {
         await ref.read(documentVaultServiceProvider).upload(
               studentUid: uid,
               label: label,
-              file: File(path),
+              file: file,
               contentType: contentType,
             );
     if (!mounted) return;

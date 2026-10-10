@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../core/utils/result.dart';
@@ -33,26 +34,38 @@ class DocumentVaultService {
   Future<Result<void>> upload({
     required String studentUid,
     required String label,
-    required File file,
+    required PlatformFile file,
     required String contentType,
   }) async {
     try {
+      final String originalName = file.name.trim().isEmpty
+          ? 'document'
+          : file.name.trim().replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
       final String safeName =
-          '${DateTime.now().millisecondsSinceEpoch}_${file.uri.pathSegments.last}';
+          '${DateTime.now().millisecondsSinceEpoch}_$originalName';
       final Reference ref =
           _storage.ref().child('studentDocuments/$studentUid/$safeName');
-      final UploadTask task = ref.putFile(
-        file,
-        SettableMetadata(contentType: contentType),
-      );
+      final SettableMetadata metadata =
+          SettableMetadata(contentType: contentType);
+      final UploadTask task;
+      if (file.bytes != null) {
+        task = ref.putData(file.bytes!, metadata);
+      } else if (file.path != null && file.path!.isNotEmpty) {
+        task = ref.putFile(File(file.path!), metadata);
+      } else {
+        return const Err<void>(AppFailure(
+          'document-file-missing',
+          'File data नहीं मिली। Document फिर से select करें।',
+        ));
+      }
       final TaskSnapshot uploaded = await task;
       final String url = await uploaded.ref.getDownloadURL();
       await _db.collection('studentDocuments').add(<String, dynamic>{
         'studentUid': studentUid,
         'label': label.trim(),
-        'fileName': file.uri.pathSegments.last,
+        'fileName': file.name,
         'contentType': contentType,
-        'sizeBytes': await file.length(),
+        'sizeBytes': file.size,
         'storagePath': uploaded.ref.fullPath,
         'downloadUrl': url,
         'uploadedAt': FieldValue.serverTimestamp(),
