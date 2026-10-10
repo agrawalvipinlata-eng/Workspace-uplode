@@ -19,10 +19,9 @@ import 'app_providers.dart';
 Stream<T> _quiet<T>(Stream<T> source, T fallback) =>
     _resilient<T>(() => source, fallback, firstTry: true);
 
-/// RESILIENT STREAM: error par stream marti nahi — fallback deke thodi
-/// der baad RECONNECT karti hai (naya stream banakar). Pehle error ke baad
-/// stream hamesha ke liye band ho jaati thi → lists freeze, naye users
-/// nahi dikhte the.
+/// RESILIENT STREAM: error par stream marti nahi — thodi der baad RECONNECT
+/// karti hai (naya stream banakar). Reconnect ke beech fallback emit nahi
+/// karte, warna cached list ek pal ke liye [] ban kar UI ko flicker karati hai.
 Stream<T> _resilient<T>(
   Stream<T> Function() factory,
   T fallback, {
@@ -36,7 +35,6 @@ Stream<T> _resilient<T>(
       }
       return; // normal close
     } catch (_) {
-      yield fallback;
       await Future<void>.delayed(const Duration(seconds: 2));
       current = null; // agla loop naya stream banayega
     }

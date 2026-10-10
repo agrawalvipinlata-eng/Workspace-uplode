@@ -37,7 +37,6 @@ class FirestoreService {
       .collection('users')
       .where('role', isEqualTo: 'student')
       .where('classSection', isEqualTo: classSection)
-      .orderBy('fullName')
       .snapshots()
       .map(_mapUsers);
 
@@ -118,8 +117,10 @@ class FirestoreService {
   Stream<List<Bus>> watchAllBuses() =>
       _db.collection('buses').orderBy('busNumber').snapshots().map(
             (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-                .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                    Bus.fromMap(d.id, d.data()),)
+                .map(
+                  (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                      Bus.fromMap(d.id, d.data()),
+                )
                 .toList(),
           );
 
@@ -143,8 +144,10 @@ class FirestoreService {
       .snapshots()
       .map(
         (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-            .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                BusStop.fromMap(d.id, d.data()),)
+            .map(
+              (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                  BusStop.fromMap(d.id, d.data()),
+            )
             .toList(),
       );
 
@@ -214,7 +217,8 @@ class FirestoreService {
           (doc.data()?['recordedPath'] as List?) ?? <dynamic>[];
       if (existing.isNotEmpty) return; // already recorded — keep first
       await _db.collection('routes').doc(routeId).update(
-          <String, dynamic>{'recordedPath': pathMaps},);
+        <String, dynamic>{'recordedPath': pathMaps},
+      );
       return;
     }
 
@@ -262,8 +266,10 @@ class FirestoreService {
       .snapshots()
       .map(
         (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-            .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                Trip.fromMap(d.id, d.data()),)
+            .map(
+              (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                  Trip.fromMap(d.id, d.data()),
+            )
             .toList(),
       );
 
@@ -298,8 +304,10 @@ class FirestoreService {
       .snapshots()
       .map(
         (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-            .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                Trip.fromMap(d.id, d.data()),)
+            .map(
+              (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                  Trip.fromMap(d.id, d.data()),
+            )
             .toList(),
       );
 
@@ -337,8 +345,10 @@ class FirestoreService {
       .snapshots()
       .map(
         (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-            .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                AppNotification.fromMap(d.id, d.data()),)
+            .map(
+              (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                  AppNotification.fromMap(d.id, d.data()),
+            )
             .toList(),
       );
 
@@ -357,8 +367,10 @@ class FirestoreService {
       .snapshots()
       .map(
         (QuerySnapshot<Map<String, dynamic>> q) => q.docs
-            .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                AuditLog.fromMap(d.id, d.data()),)
+            .map(
+              (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                  AuditLog.fromMap(d.id, d.data()),
+            )
             .toList(),
       );
 
@@ -368,8 +380,16 @@ class FirestoreService {
             (DocumentSnapshot<Map<String, dynamic>> s) => s.data(),
           );
 
-  List<AppUser> _mapUsers(QuerySnapshot<Map<String, dynamic>> q) => q.docs
-      .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-          AppUser.fromMap(d.id, d.data()),)
-      .toList();
+  List<AppUser> _mapUsers(QuerySnapshot<Map<String, dynamic>> q) {
+    final List<AppUser> users = q.docs
+        .map(
+          (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+              AppUser.fromMap(d.id, d.data()),
+        )
+        .toList();
+    // Keep UI ordering deterministic without requiring a composite index.
+    users.sort((AppUser a, AppUser b) =>
+        a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+    return users;
+  }
 }
