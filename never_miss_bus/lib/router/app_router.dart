@@ -70,8 +70,8 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
       final String loc = state.matchedLocation;
       final bool onAuthScreen = loc == '/login' || loc == '/splash';
 
-      if (session == null)
-        return onAuthScreen ? (loc == '/splash' ? '/login' : null) : '/login';
+      if (loc == '/splash') return null;
+      if (session == null) return onAuthScreen ? null : '/login';
 
       final String home = switch (session.role) {
         UserRole.student => '/student/home',
