@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/nmb_typography.dart';
 import '../../../core/utils/validators.dart';
@@ -62,21 +63,21 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
-      await FirebaseFirestore.instance
-          .collection('config')
-          .doc('school')
-          .set(<String, dynamic>{
-        'name': _name.text.trim(),
-        'phone': _phone.text.trim(),
-        'email': _email.text.trim(),
-        'address': _address.text.trim(),
-        if (_upi.text.trim().isNotEmpty) 'upiId': _upi.text.trim(),
-        if (_lat.text.trim().isNotEmpty && _lng.text.trim().isNotEmpty)
-          'location': <String, double>{
-            'lat': double.parse(_lat.text.trim()),
-            'lng': double.parse(_lng.text.trim()),
-          },
-      }, SetOptions(merge: true),);
+      await FirebaseFirestore.instance.collection('config').doc('school').set(
+        <String, dynamic>{
+          'name': _name.text.trim(),
+          'phone': _phone.text.trim(),
+          'email': _email.text.trim(),
+          'address': _address.text.trim(),
+          if (_upi.text.trim().isNotEmpty) 'upiId': _upi.text.trim(),
+          if (_lat.text.trim().isNotEmpty && _lng.text.trim().isNotEmpty)
+            'location': <String, double>{
+              'lat': double.parse(_lat.text.trim()),
+              'lng': double.parse(_lng.text.trim()),
+            },
+        },
+        SetOptions(merge: true),
+      );
       if (!mounted) return;
       showNmbSnack(context, 'School profile saved.', isSuccess: true);
     } catch (_) {
@@ -85,6 +86,19 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _openMaps() async {
+    final double? lat = double.tryParse(_lat.text.trim());
+    final double? lng = double.tryParse(_lng.text.trim());
+    if (lat == null || lng == null) {
+      showNmbSnack(context, 'पहले valid latitude और longitude भरें।',
+          isError: true);
+      return;
+    }
+    await launchUrl(
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng'),
+        mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -133,16 +147,14 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _address,
-                      decoration:
-                          const InputDecoration(hintText: 'Address'),
+                      decoration: const InputDecoration(hintText: 'Address'),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _upi,
                       decoration: const InputDecoration(
                         hintText: 'School UPI ID (e.g. school@sbi)',
-                        helperText:
-                            'Students will pay fees to this UPI ID',
+                        helperText: 'Students will pay fees to this UPI ID',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -151,25 +163,39 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _lat,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true, signed: true,),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                              signed: true,
+                            ),
                             decoration: const InputDecoration(
-                                hintText: 'School latitude',),
+                              hintText: 'School latitude',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextFormField(
                             controller: _lng,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: true, signed: true,),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                              signed: true,
+                            ),
                             decoration: const InputDecoration(
-                                hintText: 'School longitude',),
+                              hintText: 'School longitude',
+                            ),
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: _openMaps,
+                        icon: const Icon(Icons.map_outlined),
+                        label:
+                            const Text('Check exact location in Google Maps'),
+                      ),
                     ),
                   ],
                 ),

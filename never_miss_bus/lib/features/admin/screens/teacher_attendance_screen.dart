@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/theme/nmb_colors.dart';
 import '../../../core/theme/nmb_typography.dart';
 import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
-
-import '../../../core/widgets/skeleton.dart';
 import '../../../core/widgets/state_views.dart';
 import '../../../models/app_user.dart';
 import '../../../providers/app_providers.dart';
@@ -14,11 +11,8 @@ import '../../../providers/data_providers.dart';
 import '../../../services/attendance_service.dart';
 import '../../shared/student_avatar.dart';
 
-/// TEACHER ATTENDANCE — apni class ke students ki aaj ki hazri.
-/// Ek tap = present/absent toggle. "Mark all present" shortcut. Save.
 class TeacherAttendanceScreen extends ConsumerStatefulWidget {
   const TeacherAttendanceScreen({super.key});
-
   @override
   ConsumerState<TeacherAttendanceScreen> createState() =>
       _TeacherAttendanceScreenState();
@@ -27,258 +21,196 @@ class TeacherAttendanceScreen extends ConsumerStatefulWidget {
 class _TeacherAttendanceScreenState
     extends ConsumerState<TeacherAttendanceScreen> {
   final Map<String, bool> _marks = <String, bool>{};
-  bool _loaded = false;
-  bool _locked = false;
-  bool _saving = false;
   final DateTime _date = DateTime.now();
+  String? _classSection;
+  String _query = '';
+  bool _locked = false;
+  bool _loadingRecord = false;
+  bool _saving = false;
+  String? _loadedFor;
 
-  Future<void> _loadExisting(String classSection) async {
-    if (_loaded) return;
-    _loaded = true;
-    final AttendanceService svc = ref.read(attendanceServiceProvider);
+  Future<void> _load(String classSection) async {
+    if (_loadedFor == classSection) return;
+    _loadedFor = classSection;
+    _marks.clear();
+    _locked = false;
+    _loadingRecord = true;
+    setState(() {});
     try {
-      final AttendanceRecord? existing =
-          await svc.getForDate(classSection, _date);
-      if (existing != null && mounted) {
+      final AttendanceRecord? record = await ref
+          .read(attendanceServiceProvider)
+          .getForDate(classSection, _date);
+      if (mounted && record != null)
         setState(() {
-          _marks.addAll(existing.marks);
-          _locked = existing.locked;
+          _marks.addAll(record.marks);
+          _locked = record.locked;
         });
-      }
-    } catch (_) {/* fresh day */}
+    } catch (_) {}
+    if (mounted) setState(() => _loadingRecord = false);
   }
 
   Future<void> _save(String classSection, List<AppUser> students) async {
-    if (_locked) return;
-    final AttendanceService svc = ref.read(attendanceServiceProvider);
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final String? myUid = ref.read(currentSessionProvider)?.uid;
-    if (myUid == null) return;
-
-    // Jo mark nahi hue unhe present maan lo (default)
-    final Map<String, bool> full = <String, bool>{
-      for (final AppUser s in students) s.uid: _marks[s.uid] ?? true,
-    };
-
+    if (_locked || _saving) return;
+    final String? uid = ref.read(currentSessionProvider)?.uid;
+    if (uid == null) return;
     setState(() => _saving = true);
-    final Result<void> result = await svc.save(
-      classSection: classSection,
-      date: _date,
-      marks: full,
-      takenBy: myUid,
-    );
-    if (mounted) setState(() => _saving = false);
+    final Result<void> result = await ref.read(attendanceServiceProvider).save(
+        classSection: classSection,
+        date: _date,
+        marks: <String, bool>{
+          for (final AppUser s in students) s.uid: _marks[s.uid] ?? true
+        },
+        takenBy: uid);
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (result is Ok<void>) _locked = true;
+    });
     result.when(
-      ok: (_) {
-        if (mounted) setState(() => _locked = true);
-        messenger.showSnackBar(const SnackBar(
-          backgroundColor: Color(0xFF1E8E3E),
-          content: Text('Attendance saved and locked ✓',
-              style: TextStyle(color: Colors.white),),
-        ),);
-      },
-      err: (AppFailure f) => messenger.showSnackBar(SnackBar(
-        backgroundColor: const Color(0xFFC5221F),
-        content:
-            Text(f.message, style: const TextStyle(color: Colors.white)),
-      ),),
-    );
+        ok: (_) => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Attendance submitted and locked ✓'))),
+        err: (AppFailure f) => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(f.message), backgroundColor: NmbColors.danger)));
   }
 
   @override
   Widget build(BuildContext context) {
     final AppUser? me = ref.watch(myProfileProvider).valueOrNull;
-    final bool iAmTeacher = me?.role.name == 'teacher';
-    final String? myClass = me?.classSection;
-    final AsyncValue<List<AppUser>> studentsAsync =
-        ref.watch(allStudentsProvider);
-
+    final bool teacher = me?.role.name == 'teacher';
+    final List<AppUser> all =
+        ref.watch(allStudentsProvider).valueOrNull ?? const <AppUser>[];
+    final Set<String> used = all
+        .map((AppUser s) => s.classSection)
+        .whereType<String>()
+        .where((String s) => s.isNotEmpty)
+        .toSet();
+    final List<String> classes = used.toList()..sort();
+    if (teacher && me?.classSection != null) _classSection ??= me!.classSection;
+    final String? chosen = teacher ? me?.classSection : _classSection;
+    if (chosen != null) _load(chosen);
+    final List<AppUser> students = chosen == null
+        ? <AppUser>[]
+        : all
+            .where((AppUser s) => s.classSection == chosen)
+            .where((AppUser s) =>
+                _query.trim().isEmpty ||
+                '${s.fullName} ${s.rollNumber}'
+                    .toLowerCase()
+                    .contains(_query.trim().toLowerCase()))
+            .toList();
+    final int present =
+        students.where((AppUser s) => _marks[s.uid] ?? true).length;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Attendance${myClass != null ? ' — $myClass' : ''}',
-        ),
-      ),
-      body: studentsAsync.when(
-        loading: () => const ListSkeleton(),
-        error: (Object e, _) => ErrorView(
-          message: 'Couldn\'t load students.',
-          onRetry: () => ref.invalidate(allStudentsProvider),
-        ),
-        data: (List<AppUser> all) {
-          // Teacher: apni class. Admin: saare (class filter ke saath).
-          final List<AppUser> students = (iAmTeacher && myClass != null)
-              ? all.where((AppUser s) => s.classSection == myClass).toList()
-              : all;
-          if (students.isEmpty) {
-            return const EmptyState(
-              icon: Icons.fact_check_outlined,
-              title: 'No students',
-              message: 'Is class me abhi students nahi hain.',
-            );
-          }
-          if (myClass != null) _loadExisting(myClass);
-
-          final int presentCount = students
-              .where((AppUser s) => _marks[s.uid] ?? true)
-              .length;
-
-          return Column(
-            children: <Widget>[
-              // Header: date + counts + mark-all
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+          title: Text('Attendance${chosen == null ? '' : ' — $chosen'}')),
+      body: Column(children: <Widget>[
+        if (!teacher)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(children: <Widget>[
+                Expanded(
+                    child: DropdownButtonFormField<String>(
+                        value: chosen,
+                        decoration:
+                            const InputDecoration(labelText: 'Class • Section'),
+                        items: <DropdownMenuItem<String>>[
+                          for (final String c in classes)
+                            DropdownMenuItem(value: c, child: Text(c))
+                        ],
+                        onChanged: (String? v) => setState(() {
+                              _classSection = v;
+                              _loadedFor = null;
+                            }))),
+              ])),
+        if (chosen != null)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: TextField(
+                  decoration: const InputDecoration(
+                      hintText: 'Search student in this class',
+                      prefixIcon: Icon(Icons.search_rounded)),
+                  onChanged: (String v) => setState(() => _query = v))),
+        if (chosen == null)
+          const Expanded(
+              child: EmptyState(
+                  icon: Icons.fact_check_outlined,
+                  title: 'Choose a class and section',
+                  message:
+                      'Each class has its own attendance grid and submission status.'))
+        else if (_loadingRecord)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else
+          Expanded(
+              child: Column(children: <Widget>[
+            Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: NmbCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: <Widget>[
-                      Icon(Icons.today_rounded,
-                          color: NmbColors.primary,),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              AttendanceService.dateKey(_date),
-                              style: NmbTypography.cardTitle,
-                            ),
-                            Text(
-                              '$presentCount present • '
-                              '${students.length - presentCount} absent',
-                              style: NmbTypography.bodySecondary,
-                            ),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _locked ? null : () => setState(() {
-                          for (final AppUser s in students) {
-                            _marks[s.uid] = true;
-                          }
-                        }),
-                        child: const Text('All Present'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_locked)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
+                    child: Row(children: <Widget>[
+                  Icon(Icons.today_rounded, color: NmbColors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: Text(
+                          '${AttendanceService.dateKey(_date)}\n$present present • ${students.length - present} absent',
+                          style: NmbTypography.cardTitle)),
+                  Text(_locked ? 'SUBMITTED' : 'NOT SUBMITTED',
+                      style: TextStyle(
+                          color:
+                              _locked ? NmbColors.success : NmbColors.warning,
+                          fontWeight: FontWeight.w800))
+                ]))),
+            if (_locked)
+              const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Attendance submitted and locked. Admin correction only.',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              // Student list — tap = toggle
-              Expanded(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                          'Attendance submitted and locked. Admin correction only.'))),
+            Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                  itemCount: students.length,
-                  itemBuilder: (BuildContext ctx, int i) {
-                    final AppUser s = students[i];
-                    final bool present = _marks[s.uid] ?? true;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Material(
-                        color: present
-                            ? NmbColors.successSoft
-                            : NmbColors.dangerSoft,
-                        borderRadius: BorderRadius.circular(14),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: _locked
-                              ? null
-                              : () => setState(
-                                    () => _marks[s.uid] = !present,
-                                  ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Row(
-                              children: <Widget>[
-                                StudentAvatar(user: s, radius: 20),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(s.fullName,
-                                          style: NmbTypography.cardTitle
-                                              .copyWith(fontSize: 14),),
-                                      Text(
-                                        'Roll ${s.rollNumber ?? '—'}',
-                                        style: NmbTypography.caption,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6,),
-                                  decoration: BoxDecoration(
-                                    color: present
-                                        ? NmbColors.success
-                                        : NmbColors.danger,
-                                    borderRadius:
-                                        BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    present ? 'PRESENT' : 'ABSENT',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _saving || (iAmTeacher && myClass == null) || _locked
-            ? null
-            : () {
-                final List<AppUser> all =
-                    ref.read(allStudentsProvider).valueOrNull ??
-                        const <AppUser>[];
-                final List<AppUser> students =
-                    (iAmTeacher && myClass != null)
-                        ? all
-                            .where((AppUser s) =>
-                                s.classSection == myClass,)
-                            .toList()
-                        : all;
-                final String cls = myClass ??
-                    (students.isNotEmpty
-                        ? (students.first.classSection ?? 'ALL')
-                        : 'ALL');
-                _save(cls, students);
-              },
-        icon: _saving
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,),
-              )
-            : const Icon(Icons.save_rounded),
-        label: Text(_saving ? 'Saving…' : 'Save Attendance'),
-      ),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
+                    itemCount: students.length,
+                    itemBuilder: (_, int i) {
+                      final AppUser s = students[i];
+                      final bool p = _marks[s.uid] ?? true;
+                      return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                              color: p
+                                  ? NmbColors.successSoft
+                                  : NmbColors.dangerSoft,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                  onTap: _locked
+                                      ? null
+                                      : () =>
+                                          setState(() => _marks[s.uid] = !p),
+                                  child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Row(children: <Widget>[
+                                        StudentAvatar(user: s, radius: 20),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                            child: Text(
+                                                '${s.fullName}\nRoll ${s.rollNumber ?? '—'}',
+                                                style: NmbTypography.cardTitle
+                                                    .copyWith(fontSize: 14))),
+                                        Text(p ? 'PRESENT' : 'ABSENT',
+                                            style: TextStyle(
+                                                color: p
+                                                    ? NmbColors.success
+                                                    : NmbColors.danger,
+                                                fontWeight: FontWeight.w800))
+                                      ])))));
+                    })),
+          ])),
+      ]),
+      floatingActionButton: chosen == null || _locked || _saving
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _save(chosen, students),
+              icon: const Icon(Icons.save_rounded),
+              label: Text(_saving ? 'Saving…' : 'Submit attendance')),
     );
   }
 }

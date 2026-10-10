@@ -14,6 +14,7 @@ class TimetableService {
     'Friday',
     'Saturday'
   ];
+  static const List<int> periods = <int>[1, 2, 3, 4, 5];
 
   Stream<List<Map<String, dynamic>>> watchForClass(String classSection) => _db
           .collection('timetable')

@@ -6,6 +6,19 @@ class NoticeBoardService {
   NoticeBoardService(this._db);
   final FirebaseFirestore _db;
 
+  Stream<List<Map<String, dynamic>>> watchAll() => _db
+          .collection('notices')
+          .snapshots()
+          .map((QuerySnapshot<Map<String, dynamic>> snapshot) {
+        final List<Map<String, dynamic>> notices = snapshot.docs
+            .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
+                <String, dynamic>{'id': doc.id, ...doc.data()})
+            .toList();
+        notices.sort((Map<String, dynamic> a, Map<String, dynamic> b) =>
+            '${b['createdAt'] ?? ''}'.compareTo('${a['createdAt'] ?? ''}'));
+        return notices;
+      });
+
   Stream<List<Map<String, dynamic>>> watchForClass(String classSection) => _db
       .collection('notices')
       .where('targetClass', whereIn: <String>[classSection, 'ALL'])

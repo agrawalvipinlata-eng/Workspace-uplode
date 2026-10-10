@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/responsive_scaffold_body.dart';
@@ -10,7 +9,6 @@ import '../../../providers/data_providers.dart';
 
 class AdminResultsScreen extends ConsumerStatefulWidget {
   const AdminResultsScreen({super.key});
-
   @override
   ConsumerState<AdminResultsScreen> createState() => _AdminResultsScreenState();
 }
@@ -22,7 +20,6 @@ class _AdminResultsScreenState extends ConsumerState<AdminResultsScreen> {
   final TextEditingController _max = TextEditingController(text: '100');
   String? _studentUid;
   bool _saving = false;
-
   @override
   void dispose() {
     _exam.dispose();
@@ -32,58 +29,48 @@ class _AdminResultsScreenState extends ConsumerState<AdminResultsScreen> {
     super.dispose();
   }
 
+  void _snack(String s, {bool error = false, bool success = false}) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(s),
+          backgroundColor: error
+              ? Colors.red
+              : success
+                  ? Colors.green
+                  : null));
   Future<void> _save() async {
-    final List<AppUser> students =
+    final List<AppUser> ss =
         ref.read(allStudentsProvider).valueOrNull ?? const <AppUser>[];
-    AppUser? student;
-    for (final AppUser candidate in students) {
-      if (candidate.uid == _studentUid) {
-        student = candidate;
-        break;
-      }
+    AppUser? st;
+    for (final AppUser x in ss) {
+      if (x.uid == _studentUid) st = x;
     }
-    final double? marks = double.tryParse(_marks.text.trim());
+    final double? m = double.tryParse(_marks.text.trim());
     final double? max = double.tryParse(_max.text.trim());
-    if (student == null ||
+    if (st == null ||
         _exam.text.trim().isEmpty ||
         _subject.text.trim().isEmpty ||
-        marks == null ||
+        m == null ||
         max == null ||
         max <= 0 ||
-        marks < 0 ||
-        marks > max) {
-      _snack('Student, exam, subject और valid marks भरें.', error: true);
-      return;
-    }
+        m < 0 ||
+        m > max)
+      return _snack('Student, exam, subject और valid marks भरें.', error: true);
     setState(() => _saving = true);
-    final Result<void> result = await ref.read(examResultServiceProvider).save(
-          studentUid: student.uid,
-          studentClass: student.classSection ?? '',
-          examName: _exam.text,
-          subject: _subject.text,
-          marks: marks,
-          maxMarks: max,
-        );
+    final Result<void> r = await ref.read(examResultServiceProvider).save(
+        studentUid: st.uid,
+        studentClass: st.classSection ?? '',
+        examName: _exam.text,
+        subject: _subject.text,
+        marks: m,
+        maxMarks: max);
     if (!mounted) return;
     setState(() => _saving = false);
-    result.when(
-      ok: (_) {
-        _marks.clear();
-        _snack('Result published.', success: true);
-      },
-      err: (AppFailure f) => _snack(f.message, error: true),
-    );
-  }
-
-  void _snack(String text, {bool error = false, bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(text),
-      backgroundColor: error
-          ? Colors.red
-          : success
-              ? Colors.green
-              : null,
-    ));
+    r.when(
+        ok: (_) {
+          _marks.clear();
+          _snack('Result published.', success: true);
+        },
+        err: (AppFailure f) => _snack(f.message, error: true));
   }
 
   @override
@@ -91,76 +78,75 @@ class _AdminResultsScreenState extends ConsumerState<AdminResultsScreen> {
     final List<AppUser> students =
         ref.watch(allStudentsProvider).valueOrNull ?? const <AppUser>[];
     return Scaffold(
-      appBar: AppBar(title: const Text('Exam & Results')),
-      body: ResponsiveBody(
-        child: ListView(
-          children: <Widget>[
-            const Text('Publish result',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 14),
-            NmbCard(
-              child: Column(
-                children: <Widget>[
-                  DropdownButtonFormField<String>(
-                    value: _studentUid,
-                    decoration: const InputDecoration(labelText: 'Student'),
-                    items: <DropdownMenuItem<String>>[
-                      for (final AppUser student in students)
-                        DropdownMenuItem<String>(
-                          value: student.uid,
-                          child: Text(
-                              '${student.fullName} • ${student.classSection ?? '-'}'),
-                        ),
-                    ],
-                    onChanged: (String? value) =>
-                        setState(() => _studentUid = value),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                      controller: _exam,
-                      decoration: const InputDecoration(
-                          labelText: 'Exam name',
-                          hintText: 'Annual Exam 2026')),
-                  const SizedBox(height: 10),
-                  TextField(
-                      controller: _subject,
-                      decoration: const InputDecoration(labelText: 'Subject')),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                          child: TextField(
-                              controller: _marks,
-                              keyboardType: TextInputType.number,
-                              decoration:
-                                  const InputDecoration(labelText: 'Marks'))),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: TextField(
-                              controller: _max,
-                              keyboardType: TextInputType.number,
-                              decoration:
-                                  const InputDecoration(labelText: 'Maximum'))),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  FilledButton.icon(
-                    onPressed: _saving ? null : _save,
-                    icon: const Icon(Icons.publish_rounded),
-                    label: Text(_saving ? 'Saving…' : 'Publish result'),
-                  ),
+        appBar: AppBar(title: const Text('Exam & Results')),
+        body: ResponsiveBody(
+            child: ListView(children: <Widget>[
+          const Text('Publish result',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 14),
+          NmbCard(
+              child: Column(children: <Widget>[
+            DropdownButtonFormField<String>(
+                value: _studentUid,
+                decoration: const InputDecoration(labelText: 'Student'),
+                items: <DropdownMenuItem<String>>[
+                  for (final AppUser s in students)
+                    DropdownMenuItem(
+                        value: s.uid,
+                        child: Text('${s.fullName} • ${s.classSection ?? '-'}'))
                 ],
-              ),
-            ),
-            if (_studentUid != null)
-              const Padding(
-                padding: EdgeInsets.only(top: 18),
-                child: Text(
-                    'Existing results are visible to the selected student in the app.'),
-              ),
-          ],
-        ),
-      ),
-    );
+                onChanged: (String? v) => setState(() => _studentUid = v)),
+            const SizedBox(height: 10),
+            TextField(
+                controller: _exam,
+                decoration: const InputDecoration(labelText: 'Exam name')),
+            const SizedBox(height: 10),
+            TextField(
+                controller: _subject,
+                decoration: const InputDecoration(labelText: 'Subject')),
+            const SizedBox(height: 10),
+            Row(children: <Widget>[
+              Expanded(
+                  child: TextField(
+                      controller: _marks,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Marks'))),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: TextField(
+                      controller: _max,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Maximum')))
+            ]),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.publish_rounded),
+                label: Text(_saving ? 'Saving…' : 'Publish result'))
+          ])),
+          const SizedBox(height: 20),
+          const Text('Published results',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          StreamBuilder<List<Map<String, dynamic>>>(
+              stream: ref.read(examResultServiceProvider).watchAll(),
+              builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
+                if (!snap.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                if (snap.data!.isEmpty)
+                  return const Text('No results published yet.');
+                return Column(children: <Widget>[
+                  for (final Map<String, dynamic> r in snap.data!)
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: NmbCard(
+                            child: ListTile(
+                                title: Text(
+                                    '${r['examName'] ?? 'Exam'} • ${r['subject'] ?? ''}'),
+                                subtitle: Text(
+                                    '${r['classSection'] ?? '-'} • ${r['marks'] ?? 0}/${r['maxMarks'] ?? 0} • Grade ${r['grade'] ?? '-'}'))))
+                ]);
+              })
+        ])));
   }
 }

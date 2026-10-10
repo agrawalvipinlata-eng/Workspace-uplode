@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/responsive_scaffold_body.dart';
@@ -10,7 +9,6 @@ import '../../../providers/data_providers.dart';
 
 class AdminNoticeBoardScreen extends ConsumerStatefulWidget {
   const AdminNoticeBoardScreen({super.key});
-
   @override
   ConsumerState<AdminNoticeBoardScreen> createState() =>
       _AdminNoticeBoardScreenState();
@@ -22,7 +20,6 @@ class _AdminNoticeBoardScreenState
   final TextEditingController _body = TextEditingController();
   String _target = 'ALL';
   bool _saving = false;
-
   @override
   void dispose() {
     _title.dispose();
@@ -30,42 +27,35 @@ class _AdminNoticeBoardScreenState
     super.dispose();
   }
 
+  void _snack(String s, {bool error = false, bool success = false}) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(s),
+          backgroundColor: error
+              ? Colors.red
+              : success
+                  ? Colors.green
+                  : null));
   Future<void> _publish() async {
     final session = ref.read(currentSessionProvider);
     if (session == null ||
         _title.text.trim().isEmpty ||
-        _body.text.trim().isEmpty) {
-      _snack('Title और message भरें.', error: true);
-      return;
-    }
+        _body.text.trim().isEmpty)
+      return _snack('Title और message भरें.', error: true);
     setState(() => _saving = true);
-    final Result<void> result =
-        await ref.read(noticeBoardServiceProvider).publish(
-              title: _title.text,
-              body: _body.text,
-              targetClass: _target,
-              createdBy: session.uid,
-            );
+    final Result<void> r = await ref.read(noticeBoardServiceProvider).publish(
+        title: _title.text,
+        body: _body.text,
+        targetClass: _target,
+        createdBy: session.uid);
     if (!mounted) return;
     setState(() => _saving = false);
-    result.when(
-      ok: (_) {
-        _title.clear();
-        _body.clear();
-        _snack('Notice published.', success: true);
-      },
-      err: (AppFailure f) => _snack(f.message, error: true),
-    );
-  }
-
-  void _snack(String message, {bool error = false, bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
-        backgroundColor: error
-            ? Colors.red
-            : success
-                ? Colors.green
-                : null));
+    r.when(
+        ok: (_) {
+          _title.clear();
+          _body.clear();
+          _snack('Notice published.', success: true);
+        },
+        err: (AppFailure f) => _snack(f.message, error: true));
   }
 
   @override
@@ -80,42 +70,64 @@ class _AdminNoticeBoardScreenState
       ..sort();
     final List<String> targets = <String>['ALL', ...classes];
     return Scaffold(
-      appBar: AppBar(title: const Text('Notice Board')),
-      body: ResponsiveBody(
-          child: ListView(children: <Widget>[
-        const Text('Publish notice',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 14),
-        NmbCard(
-            child: Column(children: <Widget>[
-          DropdownButtonFormField<String>(
-              value: targets.contains(_target) ? _target : 'ALL',
-              decoration: const InputDecoration(labelText: 'Audience'),
-              items: <DropdownMenuItem<String>>[
-                for (final String target in targets)
-                  DropdownMenuItem<String>(
-                      value: target,
-                      child: Text(target == 'ALL' ? 'Everyone' : target))
-              ],
-              onChanged: (String? v) => setState(() => _target = v ?? 'ALL')),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _title,
-              maxLength: 80,
-              decoration: const InputDecoration(labelText: 'Title')),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _body,
-              maxLength: 500,
-              maxLines: 5,
-              decoration: const InputDecoration(labelText: 'Message')),
+        appBar: AppBar(title: const Text('Notice Board')),
+        body: ResponsiveBody(
+            child: ListView(children: <Widget>[
+          const Text('Publish notice',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
           const SizedBox(height: 14),
-          FilledButton.icon(
-              onPressed: _saving ? null : _publish,
-              icon: const Icon(Icons.publish_rounded),
-              label: Text(_saving ? 'Publishing…' : 'Publish notice')),
-        ])),
-      ])),
-    );
+          NmbCard(
+              child: Column(children: <Widget>[
+            DropdownButtonFormField<String>(
+                value: targets.contains(_target) ? _target : 'ALL',
+                decoration: const InputDecoration(labelText: 'Audience'),
+                items: <DropdownMenuItem<String>>[
+                  for (final String t in targets)
+                    DropdownMenuItem(
+                        value: t, child: Text(t == 'ALL' ? 'Everyone' : t))
+                ],
+                onChanged: (String? v) => setState(() => _target = v ?? 'ALL')),
+            const SizedBox(height: 10),
+            TextField(
+                controller: _title,
+                maxLength: 80,
+                decoration: const InputDecoration(labelText: 'Title')),
+            const SizedBox(height: 10),
+            TextField(
+                controller: _body,
+                maxLength: 500,
+                maxLines: 5,
+                decoration: const InputDecoration(labelText: 'Message')),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+                onPressed: _saving ? null : _publish,
+                icon: const Icon(Icons.publish_rounded),
+                label: Text(_saving ? 'Publishing…' : 'Publish notice'))
+          ])),
+          const SizedBox(height: 20),
+          const Text('Published notices',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          StreamBuilder<List<Map<String, dynamic>>>(
+              stream: ref.read(noticeBoardServiceProvider).watchAll(),
+              builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
+                if (!snap.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                if (snap.data!.isEmpty)
+                  return const Text('No notices published yet.');
+                return Column(children: <Widget>[
+                  for (final Map<String, dynamic> n in snap.data!)
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: NmbCard(
+                            child: ListTile(
+                                leading: const CircleAvatar(
+                                    child: Icon(Icons.campaign_rounded)),
+                                title: Text('${n['title'] ?? 'Notice'}'),
+                                subtitle: Text(
+                                    '${n['targetClass'] ?? 'ALL'} • ${n['body'] ?? ''}'))))
+                ]);
+              })
+        ])));
   }
 }

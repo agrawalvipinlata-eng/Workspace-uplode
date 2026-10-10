@@ -6,6 +6,14 @@ class ExamResultService {
   ExamResultService(this._db);
   final FirebaseFirestore _db;
 
+  Stream<List<Map<String, dynamic>>> watchAll() => _db
+      .collection('examResults')
+      .snapshots()
+      .map((QuerySnapshot<Map<String, dynamic>> snapshot) => snapshot.docs
+          .map((QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
+              <String, dynamic>{'id': doc.id, ...doc.data()})
+          .toList());
+
   Stream<List<Map<String, dynamic>>> watchForStudent(String studentUid) => _db
           .collection('examResults')
           .where('studentUid', isEqualTo: studentUid)
