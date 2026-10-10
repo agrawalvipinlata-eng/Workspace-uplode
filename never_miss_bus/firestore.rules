@@ -272,6 +272,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /notices/{noticeId} {
+      allow read: if isAdmin()
+        || (isStudent()
+            && (resource.data.targetClass == 'ALL'
+                || resource.data.targetClass == me().classSection))
+        || (isTeacher()
+            && (resource.data.targetClass == 'ALL'
+                || resource.data.targetClass == me().classSection));
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
     // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()
