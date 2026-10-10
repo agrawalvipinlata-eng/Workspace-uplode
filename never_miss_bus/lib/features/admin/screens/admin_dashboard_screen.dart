@@ -26,6 +26,8 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final List<AppUser> students =
         ref.watch(allStudentsProvider).valueOrNull ?? const <AppUser>[];
+    final List<AppUser> teachers =
+        ref.watch(allTeachersProvider).valueOrNull ?? const <AppUser>[];
     final List<AppUser> drivers =
         ref.watch(allDriversProvider).valueOrNull ?? const <AppUser>[];
     final List<Bus> buses =
@@ -34,6 +36,14 @@ class AdminDashboardScreen extends ConsumerWidget {
         ref.watch(activeTripsProvider).valueOrNull ?? const <Trip>[];
     final List<AuditLog> logs =
         ref.watch(auditLogsProvider).valueOrNull ?? const <AuditLog>[];
+    final double totalFees = students.fold<double>(
+        0, (double sum, AppUser student) => sum + student.feeTotal);
+    final double paidFees = students.fold<double>(
+        0, (double sum, AppUser student) => sum + student.feePaid);
+    final double dueFees = students.fold<double>(
+        0, (double sum, AppUser student) => sum + student.feeDue);
+    final double paidRatio =
+        totalFees == 0 ? 0 : (paidFees / totalFees).clamp(0.0, 1.0).toDouble();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
@@ -61,7 +71,9 @@ class AdminDashboardScreen extends ConsumerWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10,),
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: NmbColors.surface,
                     borderRadius: BorderRadius.circular(14),
@@ -138,6 +150,55 @@ class AdminDashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 18),
 
+            // ── Admin analytics ──
+            const Text('School Analytics', style: NmbTypography.sectionTitle),
+            const SizedBox(height: 12),
+            NmbCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                          child: _AnalyticsValue(
+                              label: 'Students',
+                              value: '${students.length}',
+                              icon: Icons.groups_rounded)),
+                      Expanded(
+                          child: _AnalyticsValue(
+                              label: 'Teachers',
+                              value: '${teachers.length}',
+                              icon: Icons.co_present_rounded)),
+                      Expanded(
+                          child: _AnalyticsValue(
+                              label: 'Fee due',
+                              value: '₹${dueFees.toStringAsFixed(0)}',
+                              icon: Icons.account_balance_wallet_rounded)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Text('Fee collection progress'),
+                      Text('${(paidRatio * 100).round()}% collected',
+                          style: NmbTypography.bodySecondary),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                      value: paidRatio,
+                      minHeight: 9,
+                      borderRadius: BorderRadius.circular(99)),
+                  const SizedBox(height: 8),
+                  Text(
+                      'Paid ₹${paidFees.toStringAsFixed(0)} of ₹${totalFees.toStringAsFixed(0)}',
+                      style: NmbTypography.caption),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // ── Live monitoring banner ──
             Material(
               color: Colors.transparent,
@@ -159,17 +220,22 @@ class AdminDashboardScreen extends ConsumerWidget {
                           color: Colors.white24,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.radar_rounded,
-                            color: Colors.white, size: 28,),
+                        child: const Icon(
+                          Icons.radar_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text('Live Bus Monitoring',
-                                style: NmbTypography.sectionTitle
-                                    .copyWith(color: Colors.white),),
+                            Text(
+                              'Live Bus Monitoring',
+                              style: NmbTypography.sectionTitle
+                                  .copyWith(color: Colors.white),
+                            ),
                             Text(
                               activeTrips.isEmpty
                                   ? 'No buses on a trip right now'
@@ -185,7 +251,9 @@ class AdminDashboardScreen extends ConsumerWidget {
                       if (activeTrips.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5,),
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: NmbColors.success,
                             borderRadius: BorderRadius.circular(999),
@@ -246,8 +314,10 @@ class AdminDashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text('Active Trips',
-                    style: NmbTypography.sectionTitle,),
+                const Text(
+                  'Active Trips',
+                  style: NmbTypography.sectionTitle,
+                ),
                 TextButton(
                   onPressed: () => context.go('/admin/monitoring'),
                   child: const Text('View All'),
@@ -258,8 +328,10 @@ class AdminDashboardScreen extends ConsumerWidget {
               const NmbCard(
                 child: Row(
                   children: <Widget>[
-                    Icon(Icons.nightlight_round,
-                        color: NmbColors.textTertiary,),
+                    Icon(
+                      Icons.nightlight_round,
+                      color: NmbColors.textTertiary,
+                    ),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -273,12 +345,17 @@ class AdminDashboardScreen extends ConsumerWidget {
             else
               NmbCard(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 6,),
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 child: Column(
                   children: <Widget>[
                     for (final Trip trip in activeTrips.take(4))
                       _ActiveTripRow(
-                          trip: trip, buses: buses, drivers: drivers,),
+                        trip: trip,
+                        buses: buses,
+                        drivers: drivers,
+                      ),
                   ],
                 ),
               ),
@@ -288,8 +365,10 @@ class AdminDashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text('Recent Activity',
-                    style: NmbTypography.sectionTitle,),
+                const Text(
+                  'Recent Activity',
+                  style: NmbTypography.sectionTitle,
+                ),
                 TextButton(
                   onPressed: () => context.go('/admin/audit'),
                   child: const Text('View All'),
@@ -306,7 +385,9 @@ class AdminDashboardScreen extends ConsumerWidget {
             else
               NmbCard(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 6,),
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 child: Column(
                   children: <Widget>[
                     for (final AuditLog log in logs.take(5))
@@ -328,8 +409,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                         ),
                         title: Text(
                           log.action.replaceAll('_', ' '),
-                          style: NmbTypography.cardTitle
-                              .copyWith(fontSize: 14),
+                          style: NmbTypography.cardTitle.copyWith(fontSize: 14),
                         ),
                         trailing: Text(
                           Formatters.timeOfDay(log.at),
@@ -402,6 +482,24 @@ class _StatCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AnalyticsValue extends StatelessWidget {
+  const _AnalyticsValue(
+      {required this.label, required this.value, required this.icon});
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: <Widget>[
+          Icon(icon, color: NmbColors.primary),
+          const SizedBox(height: 4),
+          Text(value, style: NmbTypography.cardTitle),
+          Text(label, style: NmbTypography.caption),
+        ],
+      );
 }
 
 class _ActionTile extends StatelessWidget {
@@ -481,11 +579,15 @@ class _ActiveTripRow extends ConsumerWidget {
           color: NmbColors.accentSoft,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.directions_bus_rounded,
-            color: NmbColors.accentDark,),
+        child: Icon(
+          Icons.directions_bus_rounded,
+          color: NmbColors.accentDark,
+        ),
       ),
-      title: Text(bus?.busNumber ?? trip.busId,
-          style: NmbTypography.cardTitle,),
+      title: Text(
+        bus?.busNumber ?? trip.busId,
+        style: NmbTypography.cardTitle,
+      ),
       subtitle: Text(
         '${driver?.fullName ?? 'Driver'} • '
         '${trip.startedAt != null ? 'Started at ${Formatters.timeOfDay(trip.startedAt!)}' : trip.direction.label}',
