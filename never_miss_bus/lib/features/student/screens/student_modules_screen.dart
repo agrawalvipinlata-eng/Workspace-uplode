@@ -28,6 +28,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
           '/student/home/timetable'),
       _ModuleItem('Notice Board', 'School and class announcements',
           Icons.campaign_rounded, '/student/home/notices'),
+      _ModuleItem('Fee receipts', 'Paid, due and payment history',
+          Icons.receipt_long_rounded, '/student/home/fees'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',
