@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'core/constants/app_language.dart';
 import 'core/constants/home_widgets.dart';
 import 'core/constants/nmb_constants.dart';
+import 'core/security/app_lock_manager.dart';
 import 'core/theme/app_theme_manager.dart';
 import 'models/app_user.dart';
 import 'providers/app_providers.dart';
@@ -46,6 +47,7 @@ class _NeverMissBusAppState extends ConsumerState<NeverMissBusApp>
       } catch (_) {}
       await HomeWidgetsConfig.load();
       await AppThemeManager.load();
+      await AppLockManager.load();
     });
     Future<void>.microtask(() async {
       if (!mounted) return;

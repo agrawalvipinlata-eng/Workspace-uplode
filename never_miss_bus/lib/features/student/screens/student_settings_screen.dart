@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_language.dart';
+import '../../../core/security/app_lock_manager.dart';
 import '../../../core/theme/app_theme_manager.dart';
 
 import '../../../core/theme/nmb_colors.dart';
@@ -281,6 +282,34 @@ class _StudentSettingsScreenState extends ConsumerState<StudentSettingsScreen> {
                   subtitle: Text(
                     tr('Comfortable dark appearance',
                         'आंखों के लिए आरामदायक डार्क स्क्रीन'),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            NmbCard(
+              padding: EdgeInsets.zero,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: AppLockManager.enabled,
+                builder: (BuildContext context, bool locked, Widget? _) =>
+                    SwitchListTile.adaptive(
+                  value: locked,
+                  onChanged: (bool value) async {
+                    final bool ok = await AppLockManager.setEnabled(value);
+                    if (!ok && context.mounted) {
+                      showNmbSnack(
+                        context,
+                        'Device biometric/PIN lock is not available.',
+                        isError: true,
+                      );
+                    }
+                  },
+                  secondary:
+                      Icon(Icons.fingerprint_rounded, color: NmbColors.primary),
+                  title: Text(tr('App Lock', 'ऐप लॉक')),
+                  subtitle: Text(
+                    tr('Use device PIN or biometrics when reopening',
+                        'ऐप खोलते समय फोन PIN या biometric लगाएं'),
                   ),
                 ),
               ),

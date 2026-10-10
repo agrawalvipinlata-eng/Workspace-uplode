@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_language.dart';
+import '../../core/security/app_lock_manager.dart';
 import '../../core/widgets/state_views.dart';
 import '../../models/app_user.dart';
 import '../../providers/app_providers.dart';
@@ -41,62 +42,130 @@ class StudentShell extends ConsumerWidget {
       return const ChangePasswordScreen(forced: true);
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (!didPop) _handleBack(context);
-      },
-      child: Scaffold(
-        body: Column(
-          children: <Widget>[
-            if (!online) const OfflineBanner(),
-            Expanded(child: shell),
-          ],
-        ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: shell.currentIndex,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (int index) => shell.goBranch(
-            index,
-            initialLocation: index == shell.currentIndex,
+    return AppLockGate(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, Object? result) {
+          if (!didPop) _handleBack(context);
+        },
+        child: Scaffold(
+          body: Column(
+            children: <Widget>[
+              if (!online) const OfflineBanner(),
+              Expanded(child: shell),
+            ],
           ),
-          destinations: <Widget>[
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(Icons.home_rounded),
-              label: tr('Home', 'होम'),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (int index) => shell.goBranch(
+              index,
+              initialLocation: index == shell.currentIndex,
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.grid_view_outlined),
-              selectedIcon: const Icon(Icons.grid_view_rounded),
-              label: tr('Modules', 'मॉड्यूल्स'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.map_outlined),
-              selectedIcon: const Icon(Icons.map_rounded),
-              label: tr('Track', 'ट्रैक'),
-            ),
-            NavigationDestination(
-              icon: Badge(
-                isLabelVisible: unread > 0,
-                label: Text('$unread'),
-                child: const Icon(Icons.notifications_outlined),
+            destinations: <Widget>[
+              NavigationDestination(
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: const Icon(Icons.home_rounded),
+                label: tr('Home', 'होम'),
               ),
-              selectedIcon: Badge(
-                isLabelVisible: unread > 0,
-                label: Text('$unread'),
-                child: const Icon(Icons.notifications_rounded),
+              NavigationDestination(
+                icon: const Icon(Icons.grid_view_outlined),
+                selectedIcon: const Icon(Icons.grid_view_rounded),
+                label: tr('Modules', 'मॉड्यूल्स'),
               ),
-              label: tr('Notifications', 'सूचनाएं'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.person_outline_rounded),
-              selectedIcon: const Icon(Icons.person_rounded),
-              label: tr('Account', 'अकाउंट'),
-            ),
-          ],
+              NavigationDestination(
+                icon: const Icon(Icons.map_outlined),
+                selectedIcon: const Icon(Icons.map_rounded),
+                label: tr('Track', 'ट्रैक'),
+              ),
+              NavigationDestination(
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                selectedIcon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_rounded),
+                ),
+                label: tr('Notifications', 'सूचनाएं'),
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.person_outline_rounded),
+                selectedIcon: const Icon(Icons.person_rounded),
+                label: tr('Account', 'अकाउंट'),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class AppLockGate extends StatefulWidget {
+  const AppLockGate({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<AppLockGate> createState() => _AppLockGateState();
+}
+
+class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
+  bool _backgrounded = false;
+  bool _locked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _backgrounded = true;
+    }
+    if (state == AppLifecycleState.resumed && _backgrounded) {
+      _backgrounded = false;
+      if (AppLockManager.enabled.value && mounted) {
+        setState(() => _locked = true);
+        _unlock();
+      }
+    }
+  }
+
+  Future<void> _unlock() async {
+    final bool ok = await AppLockManager.unlock();
+    if (mounted && ok) setState(() => _locked = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        widget.child,
+        if (_locked)
+          ColoredBox(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: Center(
+              child: FilledButton.icon(
+                onPressed: _unlock,
+                icon: const Icon(Icons.fingerprint_rounded),
+                label: const Text('Unlock app'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
