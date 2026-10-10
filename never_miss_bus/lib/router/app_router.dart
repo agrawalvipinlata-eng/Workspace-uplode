@@ -44,6 +44,7 @@ import '../features/student/screens/student_results_screen.dart';
 import '../features/student/screens/student_timetable_screen.dart';
 import '../features/student/screens/student_notice_board_screen.dart';
 import '../features/student/screens/student_fee_receipt_screen.dart';
+import '../features/student/screens/student_progress_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
@@ -152,6 +153,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                   GoRoute(
                     path: 'fees',
                     builder: (_, __) => const StudentFeeReceiptScreen(),
+                  ),
+                  GoRoute(
+                    path: 'progress',
+                    builder: (_, __) => const StudentProgressScreen(),
                   ),
                 ],
               ),
