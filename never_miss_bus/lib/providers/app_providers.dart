@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/admin_service.dart';
@@ -11,6 +12,7 @@ import '../services/leave_service.dart';
 import '../services/auth_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/device_session_service.dart';
+import '../services/document_vault_service.dart';
 import '../services/driver_trip_service.dart';
 import '../services/eta_service.dart';
 import '../services/firestore_service.dart';
@@ -82,6 +84,14 @@ final Provider<SchoolworkService> schoolworkServiceProvider =
 
 final Provider<RemarkService> remarkServiceProvider = Provider<RemarkService>(
   (Ref ref) => RemarkService(FirebaseFirestore.instance),
+);
+
+final Provider<DocumentVaultService> documentVaultServiceProvider =
+    Provider<DocumentVaultService>(
+  (Ref ref) => DocumentVaultService(
+    FirebaseFirestore.instance,
+    FirebaseStorage.instance,
+  ),
 );
 
 final Provider<ConnectivityService> connectivityServiceProvider =

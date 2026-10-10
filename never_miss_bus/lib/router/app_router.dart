@@ -8,6 +8,7 @@ import '../features/admin/screens/admin_audit_logs_screen.dart';
 import '../features/admin/screens/admin_error_reports_screen.dart';
 import '../features/admin/screens/admin_buses_screen.dart';
 import '../features/admin/screens/admin_dashboard_screen.dart';
+import '../features/admin/screens/admin_documents_screen.dart';
 import '../features/admin/screens/admin_drivers_screen.dart';
 import '../features/admin/screens/admin_monitoring_screen.dart';
 import '../features/admin/screens/admin_notifications_screen.dart';
@@ -274,6 +275,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/students',
             builder: (_, __) => const AdminStudentsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/documents',
+            builder: (_, __) => const AdminDocumentsScreen(),
           ),
           GoRoute(
             path: '/admin/attendance',

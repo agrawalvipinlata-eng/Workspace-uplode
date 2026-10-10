@@ -21,6 +21,7 @@ class AdminShell extends ConsumerWidget {
       <(String, String, IconData)>[
     ('/admin/dashboard', 'Dashboard', Icons.dashboard_rounded),
     ('/admin/students', 'Students', Icons.school_rounded),
+    ('/admin/documents', 'Documents', Icons.folder_copy_rounded),
     ('/admin/attendance', 'Attendance', Icons.fact_check_rounded),
     ('/admin/teachers', 'Class Teachers', Icons.co_present_rounded),
     ('/admin/drivers', 'Drivers', Icons.badge_rounded),
@@ -86,89 +87,96 @@ class AdminShell extends ConsumerWidget {
         }
       },
       child: Scaffold(
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: NmbColors.primary,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.directions_bus_rounded,
-                          color: Colors.white,),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text('Never Miss Bus',
-                              style: NmbTypography.sectionTitle,),
-                          Text('Admin Console',
-                              style: NmbTypography.caption,),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6,),
-                  children: <Widget>[
-                    for (final (String path, String label, IconData icon)
-                        in _items)
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+        drawer: Drawer(
+          child: SafeArea(
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: NmbColors.primary,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        selected: location.startsWith(path),
-                        selectedTileColor: NmbColors.primarySoft,
-                        leading: Icon(icon),
-                        title: Text(
-                          label,
-                          style: NmbTypography.body.copyWith(
-                            fontWeight: location.startsWith(path)
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                        child: const Icon(
+                          Icons.directions_bus_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Never Miss Bus',
+                              style: NmbTypography.sectionTitle,
+                            ),
+                            Text(
+                              'Admin Console',
+                              style: NmbTypography.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    children: <Widget>[
+                      for (final (String path, String label, IconData icon)
+                          in _items)
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          selected: location.startsWith(path),
+                          selectedTileColor: NmbColors.primarySoft,
+                          leading: Icon(icon),
+                          title: Text(
+                            label,
+                            style: NmbTypography.body.copyWith(
+                              fontWeight: location.startsWith(path)
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            context.go(path);
+                          },
                         ),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          context.go(path);
-                        },
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Divider(),
-              ListTile(
-                leading:
-                    const Icon(Icons.logout_rounded, color: NmbColors.danger),
-                title: Text(
-                  'Log out',
-                  style:
-                      NmbTypography.body.copyWith(color: NmbColors.danger),
+                const Divider(),
+                ListTile(
+                  leading:
+                      const Icon(Icons.logout_rounded, color: NmbColors.danger),
+                  title: Text(
+                    'Log out',
+                    style: NmbTypography.body.copyWith(color: NmbColors.danger),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _logout(context, ref);
+                  },
                 ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _logout(context, ref);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
-      ),
         body: Column(
           children: <Widget>[
             if (!online) const OfflineBanner(),

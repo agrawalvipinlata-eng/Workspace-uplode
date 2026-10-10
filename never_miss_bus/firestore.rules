@@ -239,6 +239,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Binary files live in Cloud Storage; this collection stores metadata only.
+    match /studentDocuments/{documentId} {
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.studentUid == request.auth.uid);
+      allow create: if isAdmin()
+        && request.resource.data.studentUid is string
+        && request.resource.data.label is string
+        && request.resource.data.downloadUrl is string
+        && request.resource.data.storagePath is string;
+      allow update, delete: if isAdmin();
+    }
+
     // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()
