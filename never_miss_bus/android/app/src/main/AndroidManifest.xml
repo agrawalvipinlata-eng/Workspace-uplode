@@ -33,6 +33,11 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Channel used when FCM displays notifications while the app is
+                 backgrounded or terminated. -->
+            <meta-data
+              android:name="com.google.firebase.messaging.default_notification_channel_id"
+              android:value="nmb_alerts" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

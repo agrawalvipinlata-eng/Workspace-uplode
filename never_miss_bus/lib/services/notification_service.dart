@@ -20,8 +20,7 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
 
-  static const AndroidNotificationChannel _channel =
-      AndroidNotificationChannel(
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'nmb_alerts',
     'Bus Alerts',
     description: 'Trip updates, arrival alerts and school announcements.',
@@ -30,8 +29,11 @@ class NotificationService {
 
   bool _permissionGranted = false;
   bool get permissionGranted => _permissionGranted;
+  Future<void>? _initialization;
 
-  Future<void> initialize() async {
+  Future<void> initialize() => _initialization ??= _initialize();
+
+  Future<void> _initialize() async {
     const InitializationSettings initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
@@ -76,6 +78,9 @@ class NotificationService {
   /// Call after login; keeps the token registered for this user.
   Future<void> registerDevice(String uid) async {
     try {
+      // Avoid a startup race where getToken runs before Android permission
+      // and the notification channel have finished initializing.
+      await initialize();
       final String? token = await _messaging.getToken();
       if (token != null) await _firestore.saveFcmToken(uid, token);
       _messaging.onTokenRefresh
