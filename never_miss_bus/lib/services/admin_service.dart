@@ -258,6 +258,13 @@ class AdminService {
     required Map<String, dynamic> data,
   }) async {
     try {
+      final DocumentSnapshot<Map<String, dynamic>> beforeSnapshot =
+          await _db.collection('users').doc(uid).get();
+      final Map<String, dynamic> before = <String, dynamic>{
+        for (final String key in data.keys)
+          if (beforeSnapshot.data()?.containsKey(key) ?? false)
+            key: beforeSnapshot.data()![key],
+      };
       await _db.collection('users').doc(uid).update(<String, dynamic>{
         ...data,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -265,7 +272,11 @@ class AdminService {
       // ⚡ audit background me — save turant complete
       () async {
         try {
-          await _audit('USER_PROFILE_UPDATED', 'user', uid, data);
+          await _audit('USER_PROFILE_UPDATED', 'user', uid, <String, dynamic>{
+            'changedFields': data.keys.toList(),
+            'before': before,
+            'after': data,
+          });
         } catch (_) {}
       }();
       return const Ok<void>(null);
@@ -660,6 +671,10 @@ class AdminService {
     required bool active,
   }) async {
     try {
+      final DocumentSnapshot<Map<String, dynamic>> beforeSnapshot =
+          await _db.collection('users').doc(uid).get();
+      final bool beforeActive =
+          beforeSnapshot.data()?['isActive'] as bool? ?? true;
       await _db.collection('users').doc(uid).update(<String, dynamic>{
         'isActive': active,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -676,7 +691,11 @@ class AdminService {
         active ? 'ACCOUNT_ENABLED' : 'ACCOUNT_DISABLED',
         'user',
         uid,
-        const <String, dynamic>{},
+        <String, dynamic>{
+          'changedFields': <String>['isActive'],
+          'before': <String, dynamic>{'isActive': beforeActive},
+          'after': <String, dynamic>{'isActive': active},
+        },
       );
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
@@ -784,8 +803,16 @@ class AdminService {
     Map<String, dynamic> details,
   ) async {
     try {
+      final String actorUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      String actorName = '';
+      if (actorUid.isNotEmpty) {
+        final DocumentSnapshot<Map<String, dynamic>> actor =
+            await _db.collection('users').doc(actorUid).get();
+        actorName = actor.data()?['fullName'] as String? ?? '';
+      }
       await _db.collection('auditLogs').add(<String, dynamic>{
-        'actorUid': FirebaseAuth.instance.currentUser?.uid ?? '',
+        'actorUid': actorUid,
+        'actorName': actorName,
         'actorRole': 'admin',
         'action': action,
         'target': <String, String>{'type': targetType, 'id': targetId},

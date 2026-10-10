@@ -75,14 +75,15 @@ class AdminAuditLogsScreen extends ConsumerWidget {
                               ),
                               Text(
                                 '${log.targetType} ${log.targetId}'
-                                '${log.details.isEmpty ? '' : ' • ${log.details}'}',
+                                '${log.details.isEmpty ? '' : ' • ${_details(log.details)}'}',
                                 style: NmbTypography.bodySecondary,
-                                maxLines: 2,
+                                maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'by ${log.actorRole} • '
+                                'by ${log.actorName.isEmpty ? log.actorUid : log.actorName}'
+                                ' (${log.actorRole}) • '
                                 '${Formatters.dateTime(log.at)}',
                                 style: NmbTypography.caption,
                               ),
@@ -101,5 +102,14 @@ class AdminAuditLogsScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  static String _details(Map<String, dynamic> details) {
+    final Object? before = details['before'];
+    final Object? after = details['after'];
+    if (before is Map || after is Map) {
+      return 'Before: $before → After: $after';
+    }
+    return '$details';
   }
 }
