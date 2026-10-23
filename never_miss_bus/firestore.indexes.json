@@ -54,7 +54,9 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "classSection", "order": "ASCENDING" },
-        { "fieldPath": "entryType", "order": "ASCENDING" }
+        { "fieldPath": "entryType", "order": "ASCENDING" },
+        { "fieldPath": "day", "order": "ASCENDING" },
+        { "fieldPath": "period", "order": "ASCENDING" }
       ]
     }
   ],

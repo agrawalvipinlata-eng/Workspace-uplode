@@ -460,6 +460,68 @@ class _ClassTimetableTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final String? klass = selectedClass;
+    Future<void> deleteRow(Map<String, dynamic> row) async {
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: const Text('Delete timetable entry?'),
+          content: Text(
+              '${row['day']} • Period ${row['period']}\n${row['teacher'] ?? 'Teacher'}'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      final Result<void> result =
+          await ref.read(timetableServiceProvider).deleteEntry('${row['id']}');
+      if (!context.mounted) return;
+      result.when(
+        ok: (_) => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Timetable entry deleted.'))),
+        err: (AppFailure failure) => ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message))),
+      );
+    }
+
+    Future<void> clearSelectedClass() async {
+      if (klass == null) return;
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: Text('Clear Class $klass timetable?'),
+          content: const Text('All periods for this class will be deleted.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Clear all'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      final Result<void> result =
+          await ref.read(timetableServiceProvider).clearClass(klass);
+      if (!context.mounted) return;
+      result.when(
+        ok: (_) => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Class $klass timetable cleared.'))),
+        err: (AppFailure failure) => ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(failure.message))),
+      );
+    }
+
     return Column(
       children: <Widget>[
         _SectionHeader(
@@ -483,6 +545,18 @@ class _ClassTimetableTab extends ConsumerWidget {
           onChanged: onClassChanged,
         ),
         const SizedBox(height: 12),
+        if (klass != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: clearSelectedClass,
+              icon: const Icon(Icons.delete_sweep_rounded),
+              label: const Text('Clear this class timetable'),
+              style:
+                  OutlinedButton.styleFrom(foregroundColor: NmbColors.danger),
+            ),
+          ),
+        if (klass != null) const SizedBox(height: 8),
         if (klass == null)
           const NmbCard(child: Text('Select a class to view its timetable.'))
         else
@@ -496,7 +570,8 @@ class _ClassTimetableTab extends ConsumerWidget {
                   in snapshot.data ?? const <Map<String, dynamic>>[]) {
                 cells['${row['day']}-${row['period']}'] = row;
               }
-              return _ClassGrid(classSection: klass, cells: cells);
+              return _ClassGrid(
+                  classSection: klass, cells: cells, onDelete: deleteRow);
             },
           ),
       ],
@@ -505,10 +580,15 @@ class _ClassTimetableTab extends ConsumerWidget {
 }
 
 class _ClassGrid extends StatelessWidget {
-  const _ClassGrid({required this.classSection, required this.cells});
+  const _ClassGrid({
+    required this.classSection,
+    required this.cells,
+    required this.onDelete,
+  });
 
   final String classSection;
   final Map<String, Map<String, dynamic>> cells;
+  final Future<void> Function(Map<String, dynamic> row) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -533,7 +613,12 @@ class _ClassGrid extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.w800)),
                 )),
                 for (final String day in TimetableService.weekdays)
-                  DataCell(_ClassCell(row: cells['$day-$period'])),
+                  DataCell(
+                    _ClassCell(row: cells['$day-$period']),
+                    onTap: cells['$day-$period'] == null
+                        ? null
+                        : () => onDelete(cells['$day-$period']!),
+                  ),
               ]),
           ],
         ),

@@ -36,12 +36,15 @@ class TimetableService {
           .collection('timetable')
           .where('classSection', isEqualTo: classSection)
           .where('entryType', isEqualTo: 'class'));
+
   Stream<List<Map<String, dynamic>>> watchForTeacher(String teacherUid) =>
       _watch(_db
           .collection('timetable')
           .where('teacherUid', isEqualTo: teacherUid));
+
   Stream<List<Map<String, dynamic>>> watchAll() =>
       _watch(_db.collection('timetable'));
+
   Stream<List<Map<String, dynamic>>> watchLunchDuties() => _watch(
       _db.collection('timetable').where('entryType', isEqualTo: 'lunchDuty'));
 
@@ -61,16 +64,31 @@ class TimetableService {
         return rows;
       });
 
-  Future<Result<void>> save(
-      {required String classSection,
-      required String day,
-      required int period,
-      required String subject,
-      required String teacher,
-      required String teacherUid,
-      String room = ''}) async {
+  /// Saves one class/day/period slot. Existing entries in the same slot are
+  /// removed first, so repeated taps cannot create duplicate periods.
+  Future<Result<void>> save({
+    required String classSection,
+    required String day,
+    required int period,
+    required String subject,
+    required String teacher,
+    required String teacherUid,
+    String room = '',
+  }) async {
     try {
-      await _db.collection('timetable').add(<String, dynamic>{
+      final QuerySnapshot<Map<String, dynamic>> existing = await _db
+          .collection('timetable')
+          .where('entryType', isEqualTo: 'class')
+          .where('classSection', isEqualTo: classSection.trim())
+          .where('day', isEqualTo: day)
+          .where('period', isEqualTo: period)
+          .get();
+      final WriteBatch batch = _db.batch();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+          in existing.docs) {
+        batch.delete(doc.reference);
+      }
+      batch.set(_db.collection('timetable').doc(), <String, dynamic>{
         'entryType': 'class',
         'classSection': classSection.trim(),
         'day': day,
@@ -81,6 +99,7 @@ class TimetableService {
         'room': room.trim(),
         'updatedAt': FieldValue.serverTimestamp()
       });
+      await batch.commit();
       return const Ok<void>(null);
     } on FirebaseException catch (e) {
       return Err<void>(
@@ -91,11 +110,48 @@ class TimetableService {
     }
   }
 
-  Future<Result<void>> saveLunchDuty(
-      {required String teacher,
-      required String teacherUid,
-      required String floor,
-      required String day}) async {
+  Future<Result<void>> deleteEntry(String id) async {
+    try {
+      await _db.collection('timetable').doc(id).delete();
+      return const Ok<void>(null);
+    } on FirebaseException catch (e) {
+      return Err<void>(
+          AppFailure(e.code, 'Timetable delete failed: ${e.message}'));
+    } catch (e) {
+      return Err<void>(
+          AppFailure('timetable-delete', 'Timetable delete failed: $e'));
+    }
+  }
+
+  Future<Result<void>> clearClass(String classSection) async {
+    try {
+      final QuerySnapshot<Map<String, dynamic>> snapshot = await _db
+          .collection('timetable')
+          .where('entryType', isEqualTo: 'class')
+          .where('classSection', isEqualTo: classSection)
+          .get();
+      final WriteBatch batch = _db.batch();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
+          in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      return const Ok<void>(null);
+    } on FirebaseException catch (e) {
+      return Err<void>(
+          AppFailure(e.code, 'Timetable clear failed: ${e.message}'));
+    } catch (e) {
+      return Err<void>(
+          AppFailure('timetable-clear', 'Timetable clear failed: $e'));
+    }
+  }
+
+  Future<Result<void>> saveLunchDuty({
+    required String teacher,
+    required String teacherUid,
+    required String floor,
+    required String day,
+  }) async {
     try {
       await _db.collection('timetable').add(<String, dynamic>{
         'entryType': 'lunchDuty',
