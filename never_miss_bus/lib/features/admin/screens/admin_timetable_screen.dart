@@ -22,7 +22,7 @@ class AdminTimetableScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
-  int _selectedSection = 0;
+  int? _selectedSection;
   String? _selectedClass;
 
   @override
@@ -282,28 +282,36 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-            _selectedSection == 0
-                ? _TeacherTimetableTab(
-                    teachers: teachers,
-                    classes: classes,
-                    onAdd: () => _openEntryDialog(
+            if (_selectedSection != null) ...<Widget>[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _selectedSection = null),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Back to timetable options'),
+              ),
+              const SizedBox(height: 8),
+              _selectedSection == 0
+                  ? _TeacherTimetableTab(
                       teachers: teachers,
                       classes: classes,
-                    ),
-                  )
-                : _ClassTimetableTab(
-                    classes: classes,
-                    selectedClass: _selectedClass,
-                    onClassChanged: (String? value) => setState(() {
-                      _selectedClass = value;
-                    }),
-                    onAdd: () => _openEntryDialog(
-                      teachers: teachers,
+                      onAdd: () => _openEntryDialog(
+                        teachers: teachers,
+                        classes: classes,
+                      ),
+                    )
+                  : _ClassTimetableTab(
                       classes: classes,
-                      initialClass: _selectedClass,
+                      selectedClass: _selectedClass,
+                      onClassChanged: (String? value) => setState(() {
+                        _selectedClass = value;
+                      }),
+                      onAdd: () => _openEntryDialog(
+                        teachers: teachers,
+                        classes: classes,
+                        initialClass: _selectedClass,
+                      ),
                     ),
-                  ),
+            ],
           ],
         ),
       ),
