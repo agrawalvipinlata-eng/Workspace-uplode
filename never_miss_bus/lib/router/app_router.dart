@@ -51,6 +51,7 @@ import '../features/student/screens/student_progress_screen.dart';
 import '../features/student/screens/student_documents_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
+import '../features/shared/capture_report_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
 import '../features/student/screens/customize_home_screen.dart';
 import '../features/student/screens/leave_application_screen.dart';
@@ -379,6 +380,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/errors',
             builder: (_, __) => const AdminErrorReportsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/capture',
+            builder: (_, __) => const CaptureReportScreen(),
           ),
           GoRoute(
             path: '/admin/audit',

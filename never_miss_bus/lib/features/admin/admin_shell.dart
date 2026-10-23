@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:screenshot/screenshot.dart';
 
 import '../../core/theme/nmb_colors.dart';
 import '../../core/theme/nmb_typography.dart';
@@ -10,6 +11,7 @@ import '../../core/widgets/nmb_visuals.dart';
 import '../../core/widgets/state_views.dart';
 import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
+import '../../services/capture_service.dart';
 
 /// Admin shell with a navigation drawer (admin has more sections than fit a
 /// bottom bar, but the design stays friendly, not "corporate dashboard").
@@ -41,6 +43,7 @@ class AdminShell extends ConsumerWidget {
     ('/admin/notifications', 'Notifications', Icons.campaign_rounded),
     ('/admin/trips', 'Trip History', Icons.history_rounded),
     ('/admin/errors', 'Error Reports', Icons.bug_report_rounded),
+    ('/admin/capture', 'Capture & Report', Icons.screenshot_monitor_rounded),
     ('/admin/audit', 'Activity Logs', Icons.receipt_long_rounded),
     ('/admin/settings', 'Settings', Icons.settings_rounded),
   ];
@@ -105,7 +108,8 @@ class AdminShell extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                   child: NmbGradientHeader(
                     title: 'SRBS International',
-                    subtitle: 'Never Miss Bus • Admin Console • Android build 53',
+                    subtitle:
+                        'Never Miss Bus • Admin Console • Android build 53',
                     icon: Icons.directions_bus_rounded,
                     trailing: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
@@ -117,21 +121,26 @@ class AdminShell extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: NmbColors.primarySoft,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       children: <Widget>[
-                        Icon(Icons.admin_panel_settings_rounded, color: NmbColors.primary),
+                        Icon(Icons.admin_panel_settings_rounded,
+                            color: NmbColors.primary),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              const Text('Admin workspace', style: TextStyle(fontWeight: FontWeight.w800)),
-                              Text('Manage school operations', style: NmbTypography.caption),
+                              const Text('Admin workspace',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w800)),
+                              Text('Manage school operations',
+                                  style: NmbTypography.caption),
                             ],
                           ),
                         ),
@@ -165,7 +174,13 @@ class AdminShell extends ConsumerWidget {
                                   : FontWeight.w500,
                             ),
                           ),
-                          onTap: () {
+                          onTap: () async {
+                            if (path == '/admin/capture') {
+                              await CaptureService.captureCurrent(
+                                pixelRatio:
+                                    MediaQuery.of(context).devicePixelRatio,
+                              );
+                            }
                             Navigator.of(context).pop();
                             context.go(path);
                           },
@@ -194,7 +209,12 @@ class AdminShell extends ConsumerWidget {
         body: Column(
           children: <Widget>[
             if (!online) const OfflineBanner(),
-            Expanded(child: child),
+            Expanded(
+              child: Screenshot(
+                controller: CaptureService.controller,
+                child: child,
+              ),
+            ),
           ],
         ),
       ),
