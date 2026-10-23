@@ -21,14 +21,12 @@ class AdminTimetableScreen extends ConsumerStatefulWidget {
       _AdminTimetableScreenState();
 }
 
-class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
+  int _selectedSection = 0;
   String? _selectedClass;
 
   @override
   void dispose() {
-    _tabs.dispose();
     super.dispose();
   }
 
@@ -211,6 +209,14 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (BuildContext context) => IconButton(
+            tooltip: 'Open admin menu',
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () =>
+                context.findAncestorStateOfType<ScaffoldState>()?.openDrawer(),
+          ),
+        ),
         title: const Text('Timetable Management'),
         actions: <Widget>[
           IconButton(
@@ -230,36 +236,63 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
             ),
             const SizedBox(height: 14),
             NmbCard(
-              padding: EdgeInsets.zero,
-              child: TabBar(
-                controller: _tabs,
-                tabs: const <Widget>[
-                  Tab(
-                    icon: Icon(Icons.groups_rounded),
-                    text: 'Teachers’ Timetable',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text('Choose timetable section',
+                      style: NmbTypography.sectionTitle),
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    onPressed: () => setState(() => _selectedSection = 0),
+                    icon: const Icon(Icons.groups_rounded),
+                    label: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Teachers’ Timetable'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _selectedSection == 0
+                          ? NmbColors.primary
+                          : NmbColors.primarySoft,
+                      foregroundColor: _selectedSection == 0
+                          ? Colors.white
+                          : NmbColors.primaryDark,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
                   ),
-                  Tab(
-                    icon: Icon(Icons.grid_view_rounded),
-                    text: 'Class-wise Timetable',
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed: () => setState(() => _selectedSection = 1),
+                    icon: const Icon(Icons.grid_view_rounded),
+                    label: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Class-wise Timetable'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _selectedSection == 1
+                          ? NmbColors.primary
+                          : NmbColors.primarySoft,
+                      foregroundColor: _selectedSection == 1
+                          ? Colors.white
+                          : NmbColors.primaryDark,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
-            SizedBox(
-              height: 720,
-              child: TabBarView(
-                controller: _tabs,
-                children: <Widget>[
-                  _TeacherTimetableTab(
+            _selectedSection == 0
+                ? _TeacherTimetableTab(
                     teachers: teachers,
                     classes: classes,
                     onAdd: () => _openEntryDialog(
                       teachers: teachers,
                       classes: classes,
                     ),
-                  ),
-                  _ClassTimetableTab(
+                  )
+                : _ClassTimetableTab(
                     classes: classes,
                     selectedClass: _selectedClass,
                     onClassChanged: (String? value) => setState(() {
@@ -271,9 +304,6 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
                       initialClass: _selectedClass,
                     ),
                   ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -303,7 +333,7 @@ class _TeacherTimetableTab extends ConsumerWidget {
             .where(
                 (Map<String, dynamic> row) => row['entryType'] != 'lunchDuty')
             .toList();
-        return ListView(
+        return Column(
           children: <Widget>[
             _SectionHeader(
               title: 'Teachers’ Timetable',
@@ -422,7 +452,7 @@ class _ClassTimetableTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final String? klass = selectedClass;
-    return ListView(
+    return Column(
       children: <Widget>[
         _SectionHeader(
           title: 'Class-wise Timetable',
@@ -553,25 +583,29 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NmbCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          CircleAvatar(
-            backgroundColor: NmbColors.primarySoft,
-            child: Icon(icon, color: NmbColors.primary),
+          Row(
+            children: <Widget>[
+              CircleAvatar(
+                backgroundColor: NmbColors.primarySoft,
+                child: Icon(icon, color: NmbColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(title, style: NmbTypography.sectionTitle),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: NmbTypography.bodySecondary),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(title, style: NmbTypography.sectionTitle),
-                const SizedBox(height: 4),
-                Text(subtitle, style: NmbTypography.bodySecondary),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: onPressed,
             icon: const Icon(Icons.add_rounded),
