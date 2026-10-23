@@ -48,6 +48,14 @@
         { "fieldPath": "busId", "order": "ASCENDING" },
         { "fieldPath": "isActive", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "timetable",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "classSection", "order": "ASCENDING" },
+        { "fieldPath": "entryType", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -88,7 +88,11 @@ class _TeacherAttendanceScreenState
     final List<String> classes = used.toList()..sort();
     if (teacher && me?.classSection != null) _classSection ??= me!.classSection;
     final String? chosen = teacher ? me?.classSection : _classSection;
-    if (chosen != null) _load(chosen);
+    if (chosen != null && _loadedFor != chosen && !_loadingRecord) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(chosen);
+      });
+    }
     final List<AppUser> students = chosen == null
         ? <AppUser>[]
         : all

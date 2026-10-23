@@ -34,7 +34,8 @@ class TimetableService {
   Stream<List<Map<String, dynamic>>> watchForClass(String classSection) =>
       _watch(_db
           .collection('timetable')
-          .where('classSection', isEqualTo: classSection));
+          .where('classSection', isEqualTo: classSection)
+          .where('entryType', isEqualTo: 'class'));
   Stream<List<Map<String, dynamic>>> watchForTeacher(String teacherUid) =>
       _watch(_db
           .collection('timetable')
