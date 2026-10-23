@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/theme/nmb_colors.dart';
 import '../../../core/theme/nmb_typography.dart';
+import '../../../core/constants/enums.dart';
 import '../../../core/utils/result.dart';
 import '../../../core/widgets/nmb_card.dart';
 import '../../../core/widgets/nmb_visuals.dart';
@@ -13,6 +15,7 @@ import '../../../services/timetable_service.dart';
 
 class AdminTimetableScreen extends ConsumerStatefulWidget {
   const AdminTimetableScreen({super.key});
+
   @override
   ConsumerState<AdminTimetableScreen> createState() =>
       _AdminTimetableScreenState();
@@ -20,71 +23,176 @@ class AdminTimetableScreen extends ConsumerStatefulWidget {
 
 class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _subject = TextEditingController();
-  final TextEditingController _room = TextEditingController();
-  String? _class;
-  String? _teacherUid;
-  String _day = TimetableService.weekdays.first;
-  int _period = 1;
-  String _floor = TimetableService.lunchFloors.first;
-  bool _saving = false;
-  bool _savingDuty = false;
+  late final TabController _tabs = TabController(length: 2, vsync: this);
+  String? _selectedClass;
 
   @override
   void dispose() {
-    _subject.dispose();
-    _room.dispose();
+    _tabs.dispose();
     super.dispose();
   }
 
-  void _snack(String message, {bool error = false}) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(message),
-          backgroundColor: error ? NmbColors.danger : NmbColors.success));
-
-  Future<void> _savePeriod(List<AppUser> teachers) async {
-    final AppUser? teacher =
-        teachers.where((AppUser t) => t.uid == _teacherUid).firstOrNull;
-    if (_class == null || teacher == null || _subject.text.trim().isEmpty)
-      return _snack('Class, teacher और subject भरें.', error: true);
-    setState(() => _saving = true);
-    final Result<void> result = await ref.read(timetableServiceProvider).save(
-        classSection: _class!,
-        day: _day,
-        period: _period,
-        subject: _subject.text,
-        teacher: teacher.fullName,
-        teacherUid: teacher.uid,
-        room: _room.text);
-    if (!mounted) return;
-    setState(() => _saving = false);
-    result.when(
-        ok: (_) {
-          _subject.clear();
-          _room.clear();
-          _snack('Period saved successfully.');
-        },
-        err: (AppFailure f) => _snack(f.message, error: true));
+  void _message(String text, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(text),
+      backgroundColor: error ? NmbColors.danger : NmbColors.success,
+    ));
   }
 
-  Future<void> _saveDuty(List<AppUser> teachers) async {
-    final AppUser? teacher =
-        teachers.where((AppUser t) => t.uid == _teacherUid).firstOrNull;
-    if (teacher == null)
-      return _snack('Select a teacher for lunch duty.', error: true);
-    setState(() => _savingDuty = true);
-    final Result<void> result = await ref
-        .read(timetableServiceProvider)
-        .saveLunchDuty(
-            teacher: teacher.fullName,
-            teacherUid: teacher.uid,
-            floor: _floor,
-            day: _day);
-    if (!mounted) return;
-    setState(() => _savingDuty = false);
-    result.when(
-        ok: (_) => _snack('Lunch duty assigned.'),
-        err: (AppFailure f) => _snack(f.message, error: true));
+  Future<void> _openEntryDialog({
+    required List<AppUser> teachers,
+    required List<String> classes,
+    String? initialClass,
+    String? initialTeacherUid,
+    String? initialDay,
+    int? initialPeriod,
+  }) async {
+    if (teachers.isEmpty || classes.isEmpty) {
+      _message('पहले teachers और students की class-section data add करें.',
+          error: true);
+      return;
+    }
+    String? teacherUid = initialTeacherUid ?? teachers.first.uid;
+    String classSection = initialClass ?? classes.first;
+    String day = initialDay ?? TimetableService.weekdays.first;
+    int period = initialPeriod ?? 1;
+    final TextEditingController subject = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          final AppUser? teacher = teachers
+              .where((AppUser item) => item.uid == teacherUid)
+              .firstOrNull;
+          return AlertDialog(
+            title: const Text('Add timetable entry'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  DropdownButtonFormField<String>(
+                    value: teacherUid,
+                    decoration: const InputDecoration(labelText: 'Teacher'),
+                    items: <DropdownMenuItem<String>>[
+                      for (final AppUser item in teachers)
+                        DropdownMenuItem<String>(
+                          value: item.uid,
+                          child: Text(item.fullName),
+                        ),
+                    ],
+                    onChanged: (String? value) =>
+                        setModalState(() => teacherUid = value),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: classSection,
+                    decoration:
+                        const InputDecoration(labelText: 'Class • Section'),
+                    items: <DropdownMenuItem<String>>[
+                      for (final String item in classes)
+                        DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        ),
+                    ],
+                    onChanged: (String? value) => setModalState(() {
+                      if (value != null) classSection = value;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: day,
+                    decoration: const InputDecoration(labelText: 'Day'),
+                    items: <DropdownMenuItem<String>>[
+                      for (final String item in TimetableService.weekdays)
+                        DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        ),
+                    ],
+                    onChanged: (String? value) => setModalState(() {
+                      if (value != null) day = value;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: period,
+                    decoration: const InputDecoration(labelText: 'Period'),
+                    items: <DropdownMenuItem<int>>[
+                      for (final int item in TimetableService.periods)
+                        DropdownMenuItem<int>(
+                          value: item,
+                          child: Text('Period $item'),
+                        ),
+                    ],
+                    onChanged: (int? value) => setModalState(() {
+                      if (value != null) period = value;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: subject,
+                    decoration: const InputDecoration(
+                      labelText: 'Subject (optional)',
+                      hintText: 'Shown only in admin/teacher view',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Student timetable में subject नहीं दिखेगा; वहां teacher name दिखेगा.',
+                    style: NmbTypography.caption,
+                  ),
+                  if (teacher != null) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Selected: ${teacher.fullName}',
+                          style: NmbTypography.caption),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton.icon(
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Save entry'),
+                onPressed: () async {
+                  final AppUser? selectedTeacher = teachers
+                      .where((AppUser item) => item.uid == teacherUid)
+                      .firstOrNull;
+                  if (selectedTeacher == null) return;
+                  final Result<void> result =
+                      await ref.read(timetableServiceProvider).save(
+                            classSection: classSection,
+                            day: day,
+                            period: period,
+                            subject: subject.text.trim(),
+                            teacher: selectedTeacher.fullName,
+                            teacherUid: selectedTeacher.uid,
+                          );
+                  if (!mounted) return;
+                  result.when(
+                    ok: (_) {
+                      Navigator.of(dialogContext).pop();
+                      _message('Timetable entry saved.');
+                    },
+                    err: (AppFailure failure) =>
+                        _message(failure.message, error: true),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    subject.dispose();
   }
 
   @override
@@ -94,255 +202,118 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen>
     final List<AppUser> students =
         ref.watch(allStudentsProvider).valueOrNull ?? const <AppUser>[];
     final List<String> classes = students
-        .map((AppUser s) => s.classSection ?? '')
-        .where((String s) => s.isNotEmpty)
+        .map((AppUser student) => student.classSection ?? '')
+        .where((String value) => value.isNotEmpty)
         .toSet()
         .toList()
       ..sort();
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar:
-            AppBar(title: const Text('Timetable Management'), actions: <Widget>[
+    _selectedClass ??= classes.firstOrNull;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Timetable Management'),
+        actions: <Widget>[
           IconButton(
-              onPressed: () => setState(() {}),
-              icon: const Icon(Icons.refresh_rounded))
-        ]),
-        body: ResponsiveBody(
-            child: ListView(children: <Widget>[
-          const NmbGradientHeader(
+            onPressed: () => setState(() {}),
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
+          )
+        ],
+      ),
+      body: ResponsiveBody(
+        child: ListView(
+          children: <Widget>[
+            const NmbGradientHeader(
               title: 'Timetable Management',
-              subtitle: 'Manage teacher duties and class schedules',
-              icon: Icons.calendar_month_rounded),
-          const SizedBox(height: 14),
-          const TabBar(tabs: <Widget>[
-            Tab(text: 'Admin • All Teachers'),
-            Tab(text: 'Students • Class Preview')
-          ]),
-          const SizedBox(height: 14),
-          NmbCard(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                Text('Create timetable entry',
-                    style: NmbTypography.sectionTitle),
-                const SizedBox(height: 12),
-                Row(children: <Widget>[
-                  Expanded(
-                      child: DropdownButtonFormField<String>(
-                          value: _class,
-                          decoration: const InputDecoration(
-                              labelText: 'Class • Section'),
-                          items: <DropdownMenuItem<String>>[
-                            for (final String c in classes)
-                              DropdownMenuItem(value: c, child: Text(c))
-                          ],
-                          onChanged: (String? v) =>
-                              setState(() => _class = v))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: DropdownButtonFormField<String>(
-                          value: _teacherUid,
-                          decoration:
-                              const InputDecoration(labelText: 'Teacher'),
-                          items: <DropdownMenuItem<String>>[
-                            for (final AppUser t in teachers)
-                              DropdownMenuItem(
-                                  value: t.uid, child: Text(t.fullName))
-                          ],
-                          onChanged: (String? v) =>
-                              setState(() => _teacherUid = v))),
-                ]),
-                const SizedBox(height: 10),
-                Row(children: <Widget>[
-                  Expanded(
-                      child: DropdownButtonFormField<String>(
-                          value: _day,
-                          decoration: const InputDecoration(labelText: 'Day'),
-                          items: <DropdownMenuItem<String>>[
-                            for (final String d in TimetableService.weekdays)
-                              DropdownMenuItem(value: d, child: Text(d))
-                          ],
-                          onChanged: (String? v) =>
-                              setState(() => _day = v ?? _day))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: DropdownButtonFormField<int>(
-                          value: _period,
-                          decoration:
-                              const InputDecoration(labelText: 'Period'),
-                          items: <DropdownMenuItem<int>>[
-                            for (final int p in TimetableService.periods)
-                              DropdownMenuItem(
-                                  value: p,
-                                  child: Text(
-                                      'Period $p  •  ${TimetableService.periodTimes[p - 1]}'))
-                          ],
-                          onChanged: (int? v) =>
-                              setState(() => _period = v ?? _period))),
-                ]),
-                const SizedBox(height: 10),
-                Row(children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                        controller: _subject,
-                        decoration: const InputDecoration(
-                            labelText: 'Subject / class')),
+              subtitle: 'Create teacher and class-wise weekly schedules',
+              icon: Icons.calendar_month_rounded,
+            ),
+            const SizedBox(height: 14),
+            NmbCard(
+              padding: EdgeInsets.zero,
+              child: TabBar(
+                controller: _tabs,
+                tabs: const <Widget>[
+                  Tab(
+                    icon: Icon(Icons.groups_rounded),
+                    text: 'Teachers’ Timetable',
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: TextField(
-                          controller: _room,
-                          decoration: const InputDecoration(
-                              labelText: 'Room (optional)'))),
-                ]),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                    onPressed: _saving ? null : () => _savePeriod(teachers),
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(_saving ? 'Saving…' : 'Add period')),
-              ])),
-          const SizedBox(height: 14),
-          NmbCard(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                Row(children: <Widget>[
-                  Expanded(
-                      child: Text('Lunch duties',
-                          style: NmbTypography.sectionTitle)),
-                  NmbStatusPill(
-                      label: '11:00 - 1:00', color: NmbColors.accentDark)
-                ]),
-                const SizedBox(height: 10),
-                Row(children: <Widget>[
-                  Expanded(
-                      child: DropdownButtonFormField<String>(
-                          value: _floor,
-                          decoration:
-                              const InputDecoration(labelText: 'Duty area'),
-                          items: <DropdownMenuItem<String>>[
-                            for (final String floor
-                                in TimetableService.lunchFloors)
-                              DropdownMenuItem(value: floor, child: Text(floor))
-                          ],
-                          onChanged: (String? v) =>
-                              setState(() => _floor = v ?? _floor))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: FilledButton.icon(
-                          onPressed:
-                              _savingDuty ? null : () => _saveDuty(teachers),
-                          icon: const Icon(Icons.restaurant_rounded),
-                          label:
-                              Text(_savingDuty ? 'Saving…' : 'Assign duty'))),
-                ]),
-                const SizedBox(height: 12),
-                StreamBuilder<List<Map<String, dynamic>>>(
-                    stream:
-                        ref.read(timetableServiceProvider).watchLunchDuties(),
-                    builder:
-                        (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
-                      final List<Map<String, dynamic>> duties =
-                          snap.data ?? const <Map<String, dynamic>>[];
-                      return Wrap(spacing: 8, runSpacing: 8, children: <Widget>[
-                        for (final String floor in TimetableService.lunchFloors)
-                          _DutyChip(
-                              floor: floor,
-                              teacher: duties
-                                      .where((Map<String, dynamic> d) =>
-                                          d['floor'] == floor)
-                                      .map((Map<String, dynamic> d) =>
-                                          '${d['teacher'] ?? 'Unassigned'}')
-                                      .firstOrNull ??
-                                  'Unassigned')
-                      ]);
+                  Tab(
+                    icon: Icon(Icons.grid_view_rounded),
+                    text: 'Class-wise Timetable',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 720,
+              child: TabBarView(
+                controller: _tabs,
+                children: <Widget>[
+                  _TeacherTimetableTab(
+                    teachers: teachers,
+                    classes: classes,
+                    onAdd: () => _openEntryDialog(
+                      teachers: teachers,
+                      classes: classes,
+                    ),
+                  ),
+                  _ClassTimetableTab(
+                    classes: classes,
+                    selectedClass: _selectedClass,
+                    onClassChanged: (String? value) => setState(() {
+                      _selectedClass = value;
                     }),
-              ])),
-          const SizedBox(height: 14),
-          SizedBox(
-              height: 610,
-              child: TabBarView(children: <Widget>[
-                _TeacherMatrix(),
-                _StudentPreview(classes: classes),
-              ])),
-        ])),
+                    onAdd: () => _openEntryDialog(
+                      teachers: teachers,
+                      classes: classes,
+                      initialClass: _selectedClass,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _DutyChip extends StatelessWidget {
-  const _DutyChip({required this.floor, required this.teacher});
-  final String floor;
-  final String teacher;
-  @override
-  Widget build(BuildContext context) => Container(
-      width: 170,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-          color: NmbColors.primarySoft,
-          borderRadius: BorderRadius.circular(14)),
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(floor,
-                style: NmbTypography.cardTitle
-                    .copyWith(color: NmbColors.primaryDark)),
-            const SizedBox(height: 4),
-            Text(teacher, style: NmbTypography.caption)
-          ]));
-}
+class _TeacherTimetableTab extends ConsumerWidget {
+  const _TeacherTimetableTab({
+    required this.teachers,
+    required this.classes,
+    required this.onAdd,
+  });
 
-class _TeacherMatrix extends ConsumerWidget {
-  const _TeacherMatrix();
+  final List<AppUser> teachers;
+  final List<String> classes;
+  final VoidCallback onAdd;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: ref.read(timetableServiceProvider).watchAll(),
-      builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
-        if (snap.hasError)
-          return Center(child: Text('Timetable could not load: ${snap.error}'));
-        final List<Map<String, dynamic>> rows =
-            snap.data ?? const <Map<String, dynamic>>[];
-        final Map<String, List<Map<String, dynamic>>> byTeacher =
-            <String, List<Map<String, dynamic>>>{};
-        for (final Map<String, dynamic> row in rows
-            .where((Map<String, dynamic> r) => r['entryType'] != 'lunchDuty')) {
-          (byTeacher['${row['teacher'] ?? 'Teacher'}'] ??=
-                  <Map<String, dynamic>>[])
-              .add(row);
-        }
-        if (byTeacher.isEmpty)
-          return const Center(child: Text('No teacher timetable entries yet.'));
+      builder: (BuildContext context,
+          AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        final List<Map<String, dynamic>> rows = (snapshot.data ??
+                const <Map<String, dynamic>>[])
+            .where(
+                (Map<String, dynamic> row) => row['entryType'] != 'lunchDuty')
+            .toList();
         return ListView(
-          scrollDirection: Axis.horizontal,
           children: <Widget>[
-            DataTable(
-              columns: <DataColumn>[
-                const DataColumn(label: Text('Teacher')),
-                for (int p = 1; p <= 8; p++)
-                  DataColumn(
-                      label:
-                          Text('P$p\n${TimetableService.periodTimes[p - 1]}')),
-              ],
-              rows: <DataRow>[
-                for (final MapEntry<String, List<Map<String, dynamic>>> entry
-                    in byTeacher.entries)
-                  DataRow(cells: <DataCell>[
-                    DataCell(Text(entry.key,
-                        style: const TextStyle(fontWeight: FontWeight.w800))),
-                    for (int p = 1; p <= 8; p++)
-                      DataCell(Text(entry.value
-                              .where(
-                                  (Map<String, dynamic> r) => r['period'] == p)
-                              .map((Map<String, dynamic> r) =>
-                                  '${r['subject'] ?? 'Free'}\n${r['classSection'] ?? ''}')
-                              .firstOrNull ??
-                          'Free')),
-                  ]),
-              ],
+            _SectionHeader(
+              title: 'Teachers’ Timetable',
+              subtitle: 'Teacher name, subject and Monday–Saturday assignment',
+              icon: Icons.groups_rounded,
+              actionLabel: 'Add Teacher Timetable',
+              onPressed: onAdd,
             ),
+            const SizedBox(height: 10),
+            _TeacherTable(teachers: teachers, rows: rows),
           ],
         );
       },
@@ -350,79 +321,264 @@ class _TeacherMatrix extends ConsumerWidget {
   }
 }
 
-class _StudentPreview extends ConsumerStatefulWidget {
-  const _StudentPreview({required this.classes});
-  final List<String> classes;
-  @override
-  ConsumerState<_StudentPreview> createState() => _StudentPreviewState();
-}
+class _TeacherTable extends StatelessWidget {
+  const _TeacherTable({required this.teachers, required this.rows});
 
-class _StudentPreviewState extends ConsumerState<_StudentPreview> {
-  String? selected;
+  final List<AppUser> teachers;
+  final List<Map<String, dynamic>> rows;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final List<AppUser> visibleTeachers = teachers.isEmpty
+        ? rows
+            .map((Map<String, dynamic> row) => AppUser(
+                  uid: '${row['teacherUid'] ?? row['teacher']}',
+                  fullName: '${row['teacher'] ?? 'Teacher'}',
+                  email: '',
+                  role: UserRole.teacher,
+                ))
+            .toList()
+        : teachers;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowColor: WidgetStatePropertyAll<Color>(NmbColors.primarySoft),
+        columnSpacing: 18,
+        columns: <DataColumn>[
+          const DataColumn(label: Text('Teacher Name')),
+          const DataColumn(label: Text('Subject')),
+          for (final String day in TimetableService.weekdays)
+            DataColumn(label: Text(day)),
+        ],
+        rows: <DataRow>[
+          for (final AppUser teacher in visibleTeachers)
+            DataRow(cells: <DataCell>[
+              DataCell(SizedBox(
+                width: 150,
+                child: Text(teacher.fullName,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+              )),
+              DataCell(SizedBox(
+                width: 120,
+                child: Text(_subjectsFor(teacher, rows)),
+              )),
+              for (final String day in TimetableService.weekdays)
+                DataCell(SizedBox(
+                  width: 122,
+                  child: Text(_dayText(teacher, day, rows)),
+                )),
+            ]),
+        ],
+      ),
+    );
+  }
+
+  String _subjectsFor(AppUser teacher, List<Map<String, dynamic>> rows) {
+    final Set<String> subjects = rows
+        .where((Map<String, dynamic> row) =>
+            row['teacherUid'] == teacher.uid ||
+            row['teacher'] == teacher.fullName)
+        .map((Map<String, dynamic> row) => '${row['subject'] ?? ''}')
+        .where((String value) => value.trim().isNotEmpty)
+        .toSet();
+    return subjects.isEmpty ? '—' : subjects.join(', ');
+  }
+
+  String _dayText(
+      AppUser teacher, String day, List<Map<String, dynamic>> rows) {
+    final List<Map<String, dynamic>> entries = rows
+        .where((Map<String, dynamic> row) =>
+            (row['teacherUid'] == teacher.uid ||
+                row['teacher'] == teacher.fullName) &&
+            row['day'] == day)
+        .toList()
+      ..sort((Map<String, dynamic> a, Map<String, dynamic> b) =>
+          _period(a).compareTo(_period(b)));
+    if (entries.isEmpty) return 'Free';
+    return entries.map((Map<String, dynamic> row) {
+      final String klass = '${row['classSection'] ?? ''}';
+      final int period = _period(row);
+      return 'P$period  $klass';
+    }).join('\n');
+  }
+
+  int _period(Map<String, dynamic> row) =>
+      (row['period'] is num) ? (row['period'] as num).toInt() : 0;
+}
+
+class _ClassTimetableTab extends ConsumerWidget {
+  const _ClassTimetableTab({
+    required this.classes,
+    required this.selectedClass,
+    required this.onClassChanged,
+    required this.onAdd,
+  });
+
+  final List<String> classes;
+  final String? selectedClass;
+  final ValueChanged<String?> onClassChanged;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String? klass = selectedClass;
+    return ListView(
       children: <Widget>[
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 240,
-            child: DropdownButtonFormField<String>(
-              value: selected,
-              decoration: const InputDecoration(labelText: 'Select class'),
-              items: <DropdownMenuItem<String>>[
-                for (final String c in widget.classes)
-                  DropdownMenuItem(value: c, child: Text(c)),
-              ],
-              onChanged: (String? v) => setState(() => selected = v),
-            ),
+        _SectionHeader(
+          title: 'Class-wise Timetable',
+          subtitle: 'Students see teacher names by day and period',
+          icon: Icons.grid_view_rounded,
+          actionLabel: 'Add Class-wise Timetable',
+          onPressed: onAdd,
+        ),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<String>(
+          value: klass,
+          decoration: const InputDecoration(
+            labelText: 'Select class • section',
+            prefixIcon: Icon(Icons.school_rounded),
           ),
+          items: <DropdownMenuItem<String>>[
+            for (final String item in classes)
+              DropdownMenuItem<String>(value: item, child: Text(item)),
+          ],
+          onChanged: onClassChanged,
         ),
         const SizedBox(height: 12),
-        if (selected == null)
-          const Expanded(
-              child: Center(
-                  child:
-                      Text('Select a class to preview its weekly timetable.')))
+        if (klass == null)
+          const NmbCard(child: Text('Select a class to view its timetable.'))
         else
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream:
-                  ref.read(timetableServiceProvider).watchForClass(selected!),
-              builder: (_, AsyncSnapshot<List<Map<String, dynamic>>> snap) {
-                final List<Map<String, dynamic>> rows =
-                    snap.data ?? const <Map<String, dynamic>>[];
-                final Map<String, Map<String, dynamic>> cells =
-                    <String, Map<String, dynamic>>{};
-                for (final Map<String, dynamic> row in rows)
-                  cells['${row['day']}-${row['period']}'] = row;
-                return ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: <Widget>[
-                    DataTable(
-                      columns: <DataColumn>[
-                        const DataColumn(label: Text('Day')),
-                        for (int p = 1; p <= 8; p++)
-                          DataColumn(
-                              label: Text(
-                                  'Period $p\n${TimetableService.periodTimes[p - 1]}')),
-                      ],
-                      rows: <DataRow>[
-                        for (final String day in TimetableService.weekdays)
-                          DataRow(cells: <DataCell>[
-                            DataCell(Text(day)),
-                            for (int p = 1; p <= 8; p++)
-                              DataCell(Text(
-                                  '${cells['$day-$p']?['subject'] ?? 'Free'}\n${cells['$day-$p']?['teacher'] ?? ''}')),
-                          ]),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: ref.read(timetableServiceProvider).watchForClass(klass),
+            builder: (BuildContext context,
+                AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+              final Map<String, Map<String, dynamic>> cells =
+                  <String, Map<String, dynamic>>{};
+              for (final Map<String, dynamic> row
+                  in snapshot.data ?? const <Map<String, dynamic>>[]) {
+                cells['${row['day']}-${row['period']}'] = row;
+              }
+              return _ClassGrid(classSection: klass, cells: cells);
+            },
           ),
       ],
+    );
+  }
+}
+
+class _ClassGrid extends StatelessWidget {
+  const _ClassGrid({required this.classSection, required this.cells});
+
+  final String classSection;
+  final Map<String, Map<String, dynamic>> cells;
+
+  @override
+  Widget build(BuildContext context) {
+    return NmbCard(
+      padding: EdgeInsets.zero,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: WidgetStatePropertyAll<Color>(NmbColors.primarySoft),
+          columnSpacing: 14,
+          columns: <DataColumn>[
+            const DataColumn(label: Text('Period')),
+            for (final String day in TimetableService.weekdays)
+              DataColumn(label: Text(day)),
+          ],
+          rows: <DataRow>[
+            for (final int period in TimetableService.periods)
+              DataRow(cells: <DataCell>[
+                DataCell(SizedBox(
+                  width: 90,
+                  child: Text('Period $period',
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                )),
+                for (final String day in TimetableService.weekdays)
+                  DataCell(_ClassCell(row: cells['$day-$period'])),
+              ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ClassCell extends StatelessWidget {
+  const _ClassCell({required this.row});
+  final Map<String, dynamic>? row;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool free = row == null;
+    return SizedBox(
+      width: 112,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: (free ? NmbColors.textTertiary : NmbColors.primary)
+              .withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          free ? 'Free' : '${row?['teacher'] ?? 'Teacher'}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: free ? NmbColors.textTertiary : NmbColors.primaryDark,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.actionLabel,
+    required this.onPressed,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String actionLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return NmbCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          CircleAvatar(
+            backgroundColor: NmbColors.primarySoft,
+            child: Icon(icon, color: NmbColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(title, style: NmbTypography.sectionTitle),
+                const SizedBox(height: 4),
+                Text(subtitle, style: NmbTypography.bodySecondary),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(Icons.add_rounded),
+            label: Text(actionLabel),
+          ),
+        ],
+      ),
     );
   }
 }
