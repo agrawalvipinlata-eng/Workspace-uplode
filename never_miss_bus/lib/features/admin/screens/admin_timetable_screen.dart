@@ -229,60 +229,52 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
       body: ResponsiveBody(
         child: Column(
           children: <Widget>[
-            const NmbGradientHeader(
-              title: 'Timetable Management',
-              subtitle: 'Create teacher and class-wise weekly schedules',
-              icon: Icons.calendar_month_rounded,
+            NmbGradientHeader(
+              title: _selectedSection == null
+                  ? 'Timetable Management'
+                  : _selectedSection == 0
+                      ? 'Teachers’ Timetable'
+                      : 'Class-wise Timetable',
+              subtitle: _selectedSection == null
+                  ? 'Choose one workspace to continue'
+                  : 'Weekly schedule workspace • 8 periods',
+              icon: _selectedSection == 0
+                  ? Icons.groups_rounded
+                  : _selectedSection == 1
+                      ? Icons.grid_view_rounded
+                      : Icons.calendar_month_rounded,
             ),
-            const SizedBox(height: 14),
-            NmbCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text('Choose timetable section',
-                      style: NmbTypography.sectionTitle),
-                  const SizedBox(height: 10),
-                  FilledButton.icon(
-                    onPressed: () => setState(() => _selectedSection = 0),
-                    icon: const Icon(Icons.groups_rounded),
-                    label: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Teachers’ Timetable'),
+            if (_selectedSection == null) ...<Widget>[
+              const SizedBox(height: 14),
+              NmbCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text('Choose one section',
+                        style: NmbTypography.sectionTitle),
+                    const SizedBox(height: 4),
+                    Text('Open a separate timetable workspace',
+                        style: NmbTypography.bodySecondary),
+                    const SizedBox(height: 14),
+                    _SectionOption(
+                      icon: Icons.groups_rounded,
+                      title: 'Teachers’ Timetable',
+                      subtitle: 'Manage teacher periods and assignments',
+                      color: NmbColors.primary,
+                      onTap: () => setState(() => _selectedSection = 0),
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _selectedSection == 0
-                          ? NmbColors.primary
-                          : NmbColors.primarySoft,
-                      foregroundColor: _selectedSection == 0
-                          ? Colors.white
-                          : NmbColors.primaryDark,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                    const SizedBox(height: 10),
+                    _SectionOption(
+                      icon: Icons.grid_view_rounded,
+                      title: 'Class-wise Timetable',
+                      subtitle: 'Build the weekly grid for each class',
+                      color: NmbColors.accentDark,
+                      onTap: () => setState(() => _selectedSection = 1),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: () => setState(() => _selectedSection = 1),
-                    icon: const Icon(Icons.grid_view_rounded),
-                    label: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Class-wise Timetable'),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _selectedSection == 1
-                          ? NmbColors.primary
-                          : NmbColors.primarySoft,
-                      foregroundColor: _selectedSection == 1
-                          ? Colors.white
-                          : NmbColors.primaryDark,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (_selectedSection != null) ...<Widget>[
+            ] else ...<Widget>[
               const SizedBox(height: 14),
               OutlinedButton.icon(
                 onPressed: () => setState(() => _selectedSection = null),
@@ -317,6 +309,58 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
       ),
     );
   }
+}
+
+class _SectionOption extends StatelessWidget {
+  const _SectionOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: color,
+                  child: Icon(icon, color: Colors.white),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(title,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 3),
+                      Text(subtitle, style: NmbTypography.bodySecondary),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 18, color: color),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 class _TeacherTimetableTab extends ConsumerWidget {
