@@ -227,7 +227,7 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
         ],
       ),
       body: ResponsiveBody(
-        child: ListView(
+        child: Column(
           children: <Widget>[
             const NmbGradientHeader(
               title: 'Timetable Management',
