@@ -18,6 +18,7 @@ import '../services/exam_result_service.dart';
 import '../services/eta_service.dart';
 import '../services/firestore_service.dart';
 import '../services/live_location_service.dart';
+import '../services/library_service.dart';
 import '../services/notification_service.dart';
 import '../services/notice_board_service.dart';
 import '../services/schoolwork_service.dart';
@@ -111,6 +112,11 @@ final Provider<TimetableService> timetableServiceProvider =
 final Provider<NoticeBoardService> noticeBoardServiceProvider =
     Provider<NoticeBoardService>(
   (Ref ref) => NoticeBoardService(FirebaseFirestore.instance),
+);
+
+final Provider<LibraryService> libraryServiceProvider =
+    Provider<LibraryService>(
+  (Ref ref) => LibraryService(FirebaseFirestore.instance),
 );
 
 final Provider<ConnectivityService> connectivityServiceProvider =

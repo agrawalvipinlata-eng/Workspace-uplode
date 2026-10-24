@@ -9,6 +9,7 @@ import '../features/admin/screens/admin_error_reports_screen.dart';
 import '../features/admin/screens/admin_buses_screen.dart';
 import '../features/admin/screens/admin_dashboard_screen.dart';
 import '../features/admin/screens/admin_documents_screen.dart';
+import '../features/admin/screens/admin_library_screen.dart';
 import '../features/admin/screens/admin_results_screen.dart';
 import '../features/admin/screens/admin_timetable_screen.dart';
 import '../features/admin/screens/admin_notice_board_screen.dart';
@@ -36,6 +37,7 @@ import '../features/teacher/screens/teacher_applications_screen.dart';
 import '../features/teacher/screens/teacher_profile_screen.dart';
 import '../features/teacher/screens/teacher_schoolwork_screen.dart';
 import '../features/teacher/screens/teacher_timetable_screen.dart';
+import '../features/shared/library_screen.dart';
 import '../features/student/screens/homework_screen.dart';
 import '../features/student/screens/student_alerts_screen.dart';
 import '../features/student/screens/student_bus_details_screen.dart';
@@ -167,6 +169,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                     path: 'documents',
                     builder: (_, __) => const StudentDocumentsScreen(),
                   ),
+                  GoRoute(
+                    path: 'library',
+                    builder: (_, __) => const LibraryScreen(),
+                  ),
                 ],
               ),
             ],
@@ -274,6 +280,14 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/teacher/library',
+                builder: (_, __) => const LibraryScreen(),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -324,6 +338,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/documents',
             builder: (_, __) => const AdminDocumentsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/library',
+            builder: (_, __) => const AdminLibraryScreen(),
           ),
           GoRoute(
             path: '/admin/results',

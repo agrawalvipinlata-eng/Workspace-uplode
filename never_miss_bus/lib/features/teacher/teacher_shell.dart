@@ -80,6 +80,11 @@ class TeacherShell extends ConsumerWidget {
               selectedIcon: const Icon(Icons.calendar_month_rounded),
               label: tr('Timetable', 'टाइमटेबल'),
             ),
+            NavigationDestination(
+              icon: const Icon(Icons.local_library_outlined),
+              selectedIcon: const Icon(Icons.local_library_rounded),
+              label: tr('Library', 'लाइब्रेरी'),
+            ),
           ],
         ),
       ),
