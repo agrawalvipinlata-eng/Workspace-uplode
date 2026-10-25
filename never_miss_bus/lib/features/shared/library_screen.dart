@@ -204,6 +204,17 @@ class _BookCard extends StatelessWidget {
                             maxLines: 2, overflow: TextOverflow.ellipsis),
                       ],
                       const SizedBox(height: 8),
+                      Chip(
+                        avatar: Icon(
+                          audio.isEmpty
+                              ? Icons.menu_book_rounded
+                              : Icons.headphones_rounded,
+                          size: 15,
+                        ),
+                        label:
+                            Text(audio.isEmpty ? 'Read only' : 'Read + Audio'),
+                        visualDensity: VisualDensity.compact,
+                      ),
                       Wrap(
                         spacing: 8,
                         children: <Widget>[

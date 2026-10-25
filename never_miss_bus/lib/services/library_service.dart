@@ -2189,6 +2189,419 @@ class LibraryService {
           'https://www.gutenberg.org/ebooks/search/?query=The+Secret+Agent',
       'isPublished': true,
     },
+    <String, dynamic>{
+      'id': 'demo-readonly-01',
+      'title': "The Red Badge of Courage",
+      'titleHi': "The Red Badge of Courage",
+      'author': "Stephen Crane",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Red+Badge+of+Courage',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Red+Badge+of+Courage',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-02',
+      'title': "The Awakening",
+      'titleHi': "The Awakening",
+      'author': "Kate Chopin",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=The+Awakening',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Awakening',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-03',
+      'title': "The Age of Innocence",
+      'titleHi': "The Age of Innocence",
+      'author': "Edith Wharton",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Age+of+Innocence',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Age+of+Innocence',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-04',
+      'title': "The House of Mirth",
+      'titleHi': "The House of Mirth",
+      'author': "Edith Wharton",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+House+of+Mirth',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+House+of+Mirth',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-05',
+      'title': "The Turn of the Screw",
+      'titleHi': "The Turn of the Screw",
+      'author': "Henry James",
+      'category': "Mystery",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Turn+of+the+Screw',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Turn+of+the+Screw',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-06',
+      'title': "The Portrait of a Lady",
+      'titleHi': "The Portrait of a Lady",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Portrait+of+a+Lady',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Portrait+of+a+Lady',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-07',
+      'title': "The Ambassadors",
+      'titleHi': "The Ambassadors",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Ambassadors',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Ambassadors',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-08',
+      'title': "The Golden Bowl",
+      'titleHi': "The Golden Bowl",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Golden+Bowl',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Golden+Bowl',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-09',
+      'title': "The Wings of the Dove",
+      'titleHi': "The Wings of the Dove",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Wings+of+the+Dove',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Wings+of+the+Dove',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-10',
+      'title': "The Bostonians",
+      'titleHi': "The Bostonians",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=The+Bostonians',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Bostonians',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-11',
+      'title': "The Europeans",
+      'titleHi': "The Europeans",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=The+Europeans',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Europeans',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-12',
+      'title': "The American",
+      'titleHi': "The American",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=The+American',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+American',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-13',
+      'title': "The Aspern Papers",
+      'titleHi': "The Aspern Papers",
+      'author': "Henry James",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Aspern+Papers',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Aspern+Papers',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-14',
+      'title': "The Beast in the Jungle",
+      'titleHi': "The Beast in the Jungle",
+      'author': "Henry James",
+      'category': "Literature",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Beast+in+the+Jungle',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Beast+in+the+Jungle',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-15',
+      'title': "The Open Boat",
+      'titleHi': "The Open Boat",
+      'author': "Stephen Crane",
+      'category': "Literature",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=The+Open+Boat',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Open+Boat',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-16',
+      'title': "The Wonderful Visit",
+      'titleHi': "The Wonderful Visit",
+      'author': "H. G. Wells",
+      'category': "Science Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Wonderful+Visit',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Wonderful+Visit',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-17',
+      'title': "The Food of the Gods and How It Came to Earth",
+      'titleHi': "The Food of the Gods and How It Came to Earth",
+      'author': "H. G. Wells",
+      'category': "Science Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Food+of+the+Gods+and+How+It+Came+to+Earth',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Food+of+the+Gods+and+How+It+Came+to+Earth',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-18',
+      'title': "The Sleeper Awakes",
+      'titleHi': "The Sleeper Awakes",
+      'author': "H. G. Wells",
+      'category': "Science Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Sleeper+Awakes',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=The+Sleeper+Awakes',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-19',
+      'title': "Kipps",
+      'titleHi': "Kipps",
+      'author': "H. G. Wells",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl': 'https://www.gutenberg.org/ebooks/search/?query=Kipps',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl': 'https://www.gutenberg.org/ebooks/search/?query=Kipps',
+      'isPublished': true,
+    },
+    <String, dynamic>{
+      'id': 'demo-readonly-20',
+      'title': "Love and Mr Lewisham",
+      'titleHi': "Love and Mr Lewisham",
+      'author': "H. G. Wells",
+      'category': "Classic Fiction",
+      'language': 'English',
+      'description':
+          "A public-domain read-only selection for extra learning and reading practice.",
+      'descriptionHi':
+          "अतिरिक्त ज्ञान और पढ़ने के अभ्यास के लिए सार्वजनिक डोमेन की पुस्तक।",
+      'coverUrl': '',
+      'pdfUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=Love+and+Mr+Lewisham',
+      'audioUrl': '',
+      'licenseType': 'PUBLIC_DOMAIN_DEMO',
+      'licenseUrl': 'https://www.gutenberg.org/policy/terms_of_use.html',
+      'sourceUrl':
+          'https://www.gutenberg.org/ebooks/search/?query=Love+and+Mr+Lewisham',
+      'isPublished': true,
+    },
   ];
 
   Future<Result<void>> create({
