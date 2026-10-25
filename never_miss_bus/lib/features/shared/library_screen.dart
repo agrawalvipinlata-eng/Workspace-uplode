@@ -8,6 +8,7 @@ import '../../core/theme/nmb_typography.dart';
 import '../../core/widgets/nmb_card.dart';
 import '../../core/widgets/state_views.dart';
 import '../../providers/app_providers.dart';
+import '../../services/library_service.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -37,14 +38,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         stream: ref.read(libraryServiceProvider).watchPublished(),
         builder: (BuildContext context,
             AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-          if (snapshot.hasError) {
-            return ErrorView(
-              message:
-                  'Library could not load. Please check Firebase rules and sign in again.\n\n${snapshot.error}',
-            );
-          }
-          final List<Map<String, dynamic>> books =
-              snapshot.data ?? const <Map<String, dynamic>>[];
+          final bool usingDemoCatalog = snapshot.hasError;
+          final List<Map<String, dynamic>> books = usingDemoCatalog
+              ? LibraryService.demoBooks
+              : (snapshot.data ?? const <Map<String, dynamic>>[]);
           final Set<String> categories = <String>{
             'All',
             ...books.map((Map<String, dynamic> book) =>
@@ -63,6 +60,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
             children: <Widget>[
+              if (usingDemoCatalog)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: NmbCard(
+                    child: Text(
+                      'Showing 10 public-domain demo books. Connect Firebase to load your school catalogue.',
+                      style: NmbTypography.bodySecondary,
+                    ),
+                  ),
+                ),
               NmbCard(
                 child: Row(
                   children: <Widget>[
