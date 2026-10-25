@@ -44,7 +44,7 @@ class AdminLibraryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
         appBar: AppBar(
-          title: const Text('Library Manager'),
+          title: const Text('Library'),
           actions: <Widget>[
             IconButton(
               tooltip: 'Add book',

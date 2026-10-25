@@ -215,7 +215,7 @@ class StudentDrawer extends ConsumerWidget {
                 ),
                 item(
                   icon: Icons.local_library_rounded,
-                  label: tr('Knowledge Library', 'नॉलेज लाइब्रेरी'),
+                  label: tr('Library', 'लाइब्रेरी'),
                   path: '/student/home/library',
                 ),
                 const Padding(

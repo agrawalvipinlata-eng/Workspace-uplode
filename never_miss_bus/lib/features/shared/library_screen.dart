@@ -24,7 +24,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('Knowledge Library', 'नॉलेज लाइब्रेरी')),
+        title: Text(tr('Library', 'लाइब्रेरी')),
         actions: <Widget>[
           IconButton(
             tooltip: 'Refresh',

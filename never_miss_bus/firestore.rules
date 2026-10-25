@@ -1,54 +1,55 @@
 rules_version = '2';
 
-// ═══════════════════════════════════════════════════════════════════════
-// NEVER MISS BUS — Firestore security rules (FREE / SPARK-PLAN MODE)
-//
-// No Cloud Functions needed. Authorization source of truth:
-// the CALLER's own `users/{uid}` document (role, busId, isActive),
-// which is read server-side via get() on every request. Clients cannot
-// edit their own role/assignment fields (enforced below), so a modified
-// app still cannot widen its own access.
-// ═══════════════════════════════════════════════════════════════════════
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Authentication and role helpers ──────────────────────────────
     function me() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+
     function signedIn() {
       return request.auth != null
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && me().isActive == true;
     }
-    function isAdmin()   { return signedIn() && me().role == 'admin'; }
-    function isTeacher() { return signedIn() && me().role == 'teacher'; }
-    // Teachers can manage students (add/edit) but not drivers/admins.
-    function isStaff()   { return isAdmin() || isTeacher(); }
-    function isDriver()  { return signedIn() && me().role == 'driver'; }
-    function isStudent() { return signedIn() && me().role == 'student'; }
-    function myBusId()   { return me().busId; }
 
-    // ── users ────────────────────────────────────────────────────────
+    function isAdmin() {
+      return signedIn() && me().role == 'admin';
+    }
+
+    function isTeacher() {
+      return signedIn() && me().role == 'teacher';
+    }
+
+    function isStudent() {
+      return signedIn() && me().role == 'student';
+    }
+
+    function isDriver() {
+      return signedIn() && me().role == 'driver';
+    }
+
+    function isStaff() {
+      return isAdmin() || isTeacher();
+    }
+
+    function myBusId() {
+      return me().busId;
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────
     match /users/{uid} {
-      // Owner reads own doc (needed for session bootstrap even when
-      // isActive=false, so the app can show "account disabled").
       allow read: if request.auth != null
-        && (request.auth.uid == uid
-            || isAdmin()
-            || (isStudent() && resource.data.role == 'teacher')
-            || (isTeacher()
-                && resource.data.role == 'student'
-                && resource.data.classSection == me().classSection));
+        && (
+          request.auth.uid == uid
+          || isAdmin()
+          || (isStudent() && resource.data.role == 'teacher')
+          || (isTeacher()
+              && resource.data.role == 'student'
+              && resource.data.classSection == me().classSection)
+        );
 
-      // Owner self-writes limited to harmless fields — NEVER role/bus/
-      // stop/isActive. Those are admin-only.
-      allow update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['fcmTokens', 'settings', 'lastSeenAt']);
-
-      // Admin creates profiles (paired with Auth signup via secondary
-      // app) and manages assignment/enable fields. Role/self protections:
-      // an admin cannot edit their own role or disable themselves.
       allow create: if (
           (isAdmin()
             && request.resource.data.role in
@@ -62,51 +63,57 @@ service cloud.firestore {
         && request.resource.data.email is string
         && request.resource.data.isActive == true;
 
-      allow update: if (isAdmin()
-          && (uid != request.auth.uid
-              || (request.resource.data.role == resource.data.role
-                  && request.resource.data.isActive == true))
-          && (!request.resource.data.keys().hasAny(['fees'])
-              || (request.resource.data.fees is map
-                  && request.resource.data.fees.total is number
-                  && request.resource.data.fees.paid is number
-                  && request.resource.data.fees.total >= 0
-                  && request.resource.data.fees.paid >= 0
-                  && (request.resource.data.fees.total == 0
-                      || request.resource.data.fees.paid
-                           <= request.resource.data.fees.total)))
-        || (isTeacher()
-            && resource.data.role == 'student'
-            && resource.data.classSection == me().classSection
-            && request.resource.data.role == 'student'
-            && request.resource.data.classSection == me().classSection
-            && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['fullName', 'phone', 'contactEmail', 'photoB64',
-                           'fatherPhotoB64', 'motherPhotoB64', 'settings',
-                           'updatedAt']));
+      allow update: if (
+          isAdmin()
+          && (
+            uid != request.auth.uid
+            || (
+              request.resource.data.role == resource.data.role
+              && request.resource.data.isActive == true
+            )
+          )
+        )
+        || (
+          isTeacher()
+          && resource.data.role == 'student'
+          && resource.data.classSection == me().classSection
+          && request.resource.data.role == 'student'
+          && request.resource.data.classSection == me().classSection
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'fullName', 'phone', 'contactEmail', 'photoB64',
+                'fatherPhotoB64', 'motherPhotoB64', 'settings', 'updatedAt'
+              ])
+        )
+        || (
+          request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['fcmTokens', 'settings', 'lastSeenAt'])
+        );
 
       allow delete: if isAdmin()
-        || (isTeacher()
-            && resource.data.role == 'student'
-            && resource.data.classSection == me().classSection);
+        || (
+          isTeacher()
+          && resource.data.role == 'student'
+          && resource.data.classSection == me().classSection
+        );
 
-      // Private notification inbox.
       match /inbox/{notifId} {
         allow read: if request.auth != null && request.auth.uid == uid;
-        // Owner may only mark as read.
-        allow update: if request.auth != null && request.auth.uid == uid
+        allow update: if request.auth != null
+          && request.auth.uid == uid
           && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['read'])
+              .hasOnly(['read'])
           && request.resource.data.read == true;
-        // Admin fan-out writes announcements into each inbox.
         allow create: if isAdmin()
           && request.resource.data.title is string
           && request.resource.data.body is string;
-        allow delete: if isAdmin(); // cleanup during permanent delete
+        allow delete: if isAdmin();
       }
     }
 
-    // ── buses ────────────────────────────────────────────────────────
+    // ── Transport ────────────────────────────────────────────────────
     match /buses/{busId} {
       allow read: if isStaff()
         || ((isStudent() || isDriver()) && myBusId() == busId);
@@ -116,31 +123,25 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── routes ───────────────────────────────────────────────────────
     match /routes/{routeId} {
       allow read: if isAdmin()
-        || ((isStudent() || isDriver())
-            && resource.data.busId == myBusId());
+        || ((isStudent() || isDriver()) && resource.data.busId == myBusId());
       allow create, update: if isAdmin()
         && request.resource.data.name is string
         && request.resource.data.busId is string;
-      // ROUTE RECORDING: driver apni bus ke route ka sirf recordedPath
-      // update kar sakta hai (pehli trip ka GPS trace).
       allow update: if isDriver()
         && resource.data.busId == myBusId()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['recordedPath']);
+            .hasOnly(['recordedPath']);
       allow create: if isDriver()
         && request.resource.data.busId == myBusId()
         && request.resource.data.isActive == true;
       allow delete: if isAdmin();
     }
 
-    // ── stops ────────────────────────────────────────────────────────
     match /stops/{stopId} {
       allow read: if isStaff()
-        || ((isStudent() || isDriver())
-            && resource.data.busId == myBusId());
+        || ((isStudent() || isDriver()) && resource.data.busId == myBusId());
       allow create, update: if isAdmin()
         && request.resource.data.name is string
         && request.resource.data.location.lat is number
@@ -152,86 +153,32 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── trips ────────────────────────────────────────────────────────
     match /trips/{tripId} {
       allow read: if isAdmin()
         || (isDriver() && resource.data.driverId == request.auth.uid)
         || (isStudent() && resource.data.busId == myBusId());
-
       allow create: if isDriver()
         && request.resource.data.driverId == request.auth.uid
         && request.resource.data.busId == myBusId()
         && request.resource.data.status == 'active'
         && request.resource.data.direction in ['pickup', 'drop'];
-
       allow update: if isAdmin()
-        || (isDriver()
-            && resource.data.driverId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['status', 'endedAt', 'lastKnown', 'stopsReached'])
-            && request.resource.data.status in ['active', 'completed']);
-
+        || (
+          isDriver()
+          && resource.data.driverId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'endedAt', 'lastKnown', 'stopsReached'])
+          && request.resource.data.status in ['active', 'completed']
+        );
       allow delete: if false;
     }
 
-    // ── auditLogs — append-only, admin-written, admin-read ───────────
+    // ── Audit and configuration ──────────────────────────────────────
     match /auditLogs/{logId} {
       allow read: if isAdmin();
       allow create: if isAdmin()
         && request.resource.data.actorUid == request.auth.uid;
-      allow update, delete: if false; // tamper-proof: no edits, no deletes
-    }
-
-    // ── config ───────────────────────────────────────────────────────
-    // ── attendance (teacher submits once; admin may correct) ───────────
-    match /attendance/{attId} {
-      allow read: if isAdmin()
-        || (isTeacher()
-            && resource.data.classSection == me().classSection)
-        || (isStudent()
-            && resource.data.classSection == me().classSection);
-      allow create: if isAdmin()
-        || (isTeacher()
-            && request.resource.data.classSection == me().classSection
-            && request.resource.data.takenBy == request.auth.uid
-            && request.resource.data.locked == true);
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-
-    // 📝 LEAVE APPLICATIONS — student bhejta hai, teacher/admin decide
-    match /applications/{appId} {
-      // Student: apni hi application create (status pending hi ho)
-      allow create: if isStudent()
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.classSection == me().classSection;
-      // Read: apni khud ki, ya staff (teacher apni class ki)
-      allow read: if isAdmin()
-        || (isStudent() && resource.data.uid == request.auth.uid)
-        || (isTeacher() && resource.data.classSection == me().classSection);
-      // Decide: admin sab, teacher apni class ki — sirf status fields
-      allow update: if (isAdmin()
-          || (isTeacher()
-              && resource.data.classSection == me().classSection))
-        && resource.data.status == 'pending'
-        && request.resource.data.status in ['approved', 'rejected']
-        && request.resource.data.decidedBy == request.auth.uid
-        && (request.resource.data.status == 'approved'
-            || (request.resource.data.decisionNote is string
-                && request.resource.data.decisionNote.size() >= 3))
-        && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'decidedBy', 'decidedAt', 'decisionNote']);
-      allow delete: if isAdmin();
-    }
-
-
-    // 🧠 ERROR REPORTS — koi bhi logged-in user apni error report bhejta
-    // hai; sirf admin padhta/update/delete karta hai.
-    match /errorReports/{reportId} {
-      allow create: if signedIn();
-      allow read, update, delete: if isAdmin();
+      allow update, delete: if false;
     }
 
     match /config/school {
@@ -239,7 +186,55 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Binary files live in Cloud Storage; this collection stores metadata only.
+    // ── Attendance and applications ──────────────────────────────────
+    match /attendance/{attId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.classSection == me().classSection)
+        || (isStudent() && resource.data.classSection == me().classSection);
+      allow create: if isAdmin()
+        || (
+          isTeacher()
+          && request.resource.data.classSection == me().classSection
+          && request.resource.data.takenBy == request.auth.uid
+          && request.resource.data.locked == true
+        );
+      allow update, delete: if isAdmin();
+    }
+
+    match /applications/{appId} {
+      allow create: if isStudent()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.classSection == me().classSection;
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.uid == request.auth.uid)
+        || (isTeacher() && resource.data.classSection == me().classSection);
+      allow update: if (
+          isAdmin()
+          || (isTeacher() && resource.data.classSection == me().classSection)
+        )
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['approved', 'rejected']
+        && request.resource.data.decidedBy == request.auth.uid
+        && (
+          request.resource.data.status == 'approved'
+          || (
+            request.resource.data.decisionNote is string
+            && request.resource.data.decisionNote.size() >= 3
+          )
+        )
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'decidedBy', 'decidedAt', 'decisionNote']);
+      allow delete: if isAdmin();
+    }
+
+    // ── Error reports ─────────────────────────────────────────────────
+    match /errorReports/{reportId} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Student documents metadata ───────────────────────────────────
     match /studentDocuments/{documentId} {
       allow read: if isAdmin()
         || (isStudent() && resource.data.studentUid == request.auth.uid);
@@ -255,8 +250,7 @@ service cloud.firestore {
             && request.resource.data.downloadUrl is string
             && request.resource.data.storagePath is string
           )
-          ||
-          (
+          || (
             request.resource.data.storageProvider == 'r2'
             && request.resource.data.objectKey is string
           )
@@ -264,26 +258,31 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Exam results: students read only their own records; staff publishes.
+    // ── Exam results ──────────────────────────────────────────────────
     match /examResults/{resultId} {
       allow read: if isAdmin()
         || (isStudent() && resource.data.studentUid == request.auth.uid)
         || (isTeacher() && resource.data.classSection == me().classSection);
       allow create: if isAdmin()
-        || (isTeacher()
-            && request.resource.data.classSection == me().classSection);
+        || (isTeacher() && request.resource.data.classSection == me().classSection);
       allow update, delete: if isAdmin();
     }
 
+    // ── Timetable ─────────────────────────────────────────────────────
     match /timetable/{entryId} {
       allow read: if isAdmin()
-        || (isStudent()
-            && (!('entryType' in resource.data)
-                || resource.data.entryType == 'class')
-            && resource.data.classSection == me().classSection)
-        || (isTeacher()
-            && (resource.data.teacherUid == request.auth.uid
-                || resource.data.classSection == me().classSection));
+        || (
+          isStudent()
+          && resource.data.entryType == 'class'
+          && resource.data.classSection == me().classSection
+        )
+        || (
+          isTeacher()
+          && (
+            resource.data.teacherUid == request.auth.uid
+            || resource.data.classSection == me().classSection
+          )
+        );
       allow create: if isAdmin()
         && request.resource.data.entryType in ['class', 'lunchDuty']
         && request.resource.data.teacherUid is string
@@ -292,44 +291,69 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── Notice board ──────────────────────────────────────────────────
     match /notices/{noticeId} {
       allow read: if isAdmin()
-        || (isStudent()
-            && (resource.data.targetClass == 'ALL'
-                || resource.data.targetClass == me().classSection))
-        || (isTeacher()
-            && (resource.data.targetClass == 'ALL'
-                || resource.data.targetClass == me().classSection));
-      allow create: if isAdmin();
-      allow update, delete: if isAdmin();
+        || (
+          isStudent()
+          && (
+            resource.data.targetClass == 'ALL'
+            || resource.data.targetClass == me().classSection
+          )
+        )
+        || (
+          isTeacher()
+          && (
+            resource.data.targetClass == 'ALL'
+            || resource.data.targetClass == me().classSection
+          )
+        );
+      allow create, update, delete: if isAdmin();
     }
 
-    // Library stores metadata only. PDF/audio files stay on an external,
-    // licensed host such as R2/CDN; never upload them to Firebase Storage.
+    // ── Library metadata ─────────────────────────────────────────────
+    // PDF/audio files must stay on a licensed R2/CDN host.
     match /libraryBooks/{bookId} {
       allow read: if isAdmin()
         || ((isStudent() || isTeacher())
             && resource.data.isPublished == true);
+
       allow create: if isAdmin()
         && request.resource.data.title is string
         && request.resource.data.author is string
         && request.resource.data.category is string
         && request.resource.data.language is string
+        && request.resource.data.description is string
+        && request.resource.data.coverUrl is string
+        && request.resource.data.pdfUrl is string
+        && request.resource.data.audioUrl is string
         && request.resource.data.licenseType is string
+        && request.resource.data.licenseUrl is string
         && request.resource.data.sourceUrl is string
+        && request.resource.data.isPublished is bool
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isAdmin()
+        && request.resource.data.title is string
+        && request.resource.data.author is string
+        && request.resource.data.category is string
+        && request.resource.data.language is string
         && request.resource.data.isPublished is bool;
-      allow update, delete: if isAdmin();
+
+      allow delete: if isAdmin();
     }
 
-    // ── DAILY DIARY / HOMEWORK ─────────────────────────────────────────
+    // ── Diary, homework and remarks ──────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()
         || (isTeacher() && resource.data.classSection == me().classSection)
         || (isStudent() && resource.data.classSection == me().classSection);
       allow create, update: if isAdmin()
-        || (isTeacher()
-            && request.resource.data.teacherUid == request.auth.uid
-            && request.resource.data.classSection == me().classSection);
+        || (
+          isTeacher()
+          && request.resource.data.teacherUid == request.auth.uid
+          && request.resource.data.classSection == me().classSection
+        );
       allow delete: if isAdmin();
     }
 
@@ -338,13 +362,17 @@ service cloud.firestore {
         || (isTeacher() && resource.data.classSection == me().classSection)
         || (isStudent() && resource.data.classSection == me().classSection);
       allow create: if isAdmin()
-        || (isTeacher()
-            && request.resource.data.teacherUid == request.auth.uid
-            && request.resource.data.classSection == me().classSection);
+        || (
+          isTeacher()
+          && request.resource.data.teacherUid == request.auth.uid
+          && request.resource.data.classSection == me().classSection
+        );
       allow update, delete: if isAdmin()
-        || (isTeacher()
-            && resource.data.teacherUid == request.auth.uid
-            && resource.data.classSection == me().classSection);
+        || (
+          isTeacher()
+          && resource.data.teacherUid == request.auth.uid
+          && resource.data.classSection == me().classSection
+        );
     }
 
     match /remarks/{remarkId} {
@@ -362,7 +390,7 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Default deny.
+    // Everything not explicitly listed above is denied.
     match /{document=**} {
       allow read, write: if false;
     }
