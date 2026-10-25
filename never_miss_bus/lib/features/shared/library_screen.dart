@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_language.dart';
 import '../../core/theme/nmb_colors.dart';
@@ -9,6 +8,7 @@ import '../../core/widgets/nmb_card.dart';
 import '../../core/widgets/state_views.dart';
 import '../../providers/app_providers.dart';
 import '../../services/library_service.dart';
+import 'library_reader_screen.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -151,15 +151,32 @@ class _BookCard extends StatelessWidget {
   const _BookCard({required this.book});
   final Map<String, dynamic> book;
 
-  Future<void> _open(BuildContext context, String value, String label) async {
+  Future<void> _openInApp(
+      BuildContext context, String value, String title, bool isAudio) async {
     final Uri? uri = Uri.tryParse(value);
-    if (uri == null ||
-        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$label link is not available.')));
-      }
+    if (uri == null || !uri.hasScheme) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${isAudio ? 'Audio' : 'Book'} is not available.')));
+      return;
     }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => LibraryReaderScreen(
+          title: title,
+          url: value,
+          isAudio: isAudio,
+        ),
+      ),
+    );
+  }
+
+  bool _isDirectAudio(String value) {
+    final String clean = value.toLowerCase().split('?').first;
+    return clean.endsWith('.mp3') ||
+        clean.endsWith('.m4a') ||
+        clean.endsWith('.aac') ||
+        clean.endsWith('.ogg') ||
+        clean.endsWith('.wav');
   }
 
   @override
@@ -180,14 +197,15 @@ class _BookCard extends StatelessWidget {
         final String displayDescription =
             description.isEmpty ? fallbackDescription : description;
         final String pdf = '${book['pdfUrl'] ?? ''}';
-        final String audio = '${book['audioUrl'] ?? ''}';
+        final String audioUrl = '${book['audioUrl'] ?? ''}';
+        final String audio = _isDirectAudio(audioUrl) ? audioUrl : '';
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: NmbCard(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                _BookVisual(book: book, title: displayTitle),
+                _BookVisual(book: book),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -220,14 +238,16 @@ class _BookCard extends StatelessWidget {
                         children: <Widget>[
                           if (pdf.isNotEmpty)
                             OutlinedButton.icon(
-                              onPressed: () => _open(context, pdf, 'PDF'),
+                              onPressed: () =>
+                                  _openInApp(context, pdf, displayTitle, false),
                               icon: const Icon(Icons.picture_as_pdf_rounded,
                                   size: 17),
                               label: const Text('Read PDF'),
                             ),
                           if (audio.isNotEmpty)
                             FilledButton.tonalIcon(
-                              onPressed: () => _open(context, audio, 'Audio'),
+                              onPressed: () => _openInApp(
+                                  context, audio, displayTitle, true),
                               icon: const Icon(Icons.headphones_rounded,
                                   size: 17),
                               label: const Text('Listen'),
@@ -247,9 +267,8 @@ class _BookCard extends StatelessWidget {
 }
 
 class _BookVisual extends StatelessWidget {
-  const _BookVisual({required this.book, required this.title});
+  const _BookVisual({required this.book});
   final Map<String, dynamic> book;
-  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -296,26 +315,12 @@ class _BookVisual extends StatelessWidget {
                   image: cover.isNotEmpty
                       ? DecorationImage(
                           image: NetworkImage(cover), fit: BoxFit.cover)
-                      : null,
-                ),
-                child: cover.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(7),
-                          child: Text(
-                            title,
-                            maxLines: 4,
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: NmbColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                      : const DecorationImage(
+                          image:
+                              AssetImage('assets/images/library_3d_book.png'),
+                          fit: BoxFit.contain,
                         ),
-                      )
-                    : null,
+                ),
               ),
             ),
           ),
