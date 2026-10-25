@@ -19,10 +19,12 @@ class AdminLibraryScreen extends ConsumerWidget {
     final String uid = ref.read(currentSessionProvider)?.uid ?? '';
     final Result<void> result = await ref.read(libraryServiceProvider).create(
           title: data['title'] ?? '',
+          titleHi: data['titleHi'] ?? '',
           author: data['author'] ?? '',
           category: data['category'] ?? 'General',
           language: data['language'] ?? 'English',
           description: data['description'] ?? '',
+          descriptionHi: data['descriptionHi'] ?? '',
           coverUrl: data['coverUrl'] ?? '',
           pdfUrl: data['pdfUrl'] ?? '',
           audioUrl: data['audioUrl'] ?? '',
@@ -154,10 +156,12 @@ class _LibraryEntryDialogState extends State<_LibraryEntryDialog> {
   final Map<String, TextEditingController> _c = <String, TextEditingController>{
     for (final String key in <String>[
       'title',
+      'titleHi',
       'author',
       'category',
       'language',
       'description',
+      'descriptionHi',
       'coverUrl',
       'pdfUrl',
       'audioUrl',
@@ -194,10 +198,12 @@ class _LibraryEntryDialogState extends State<_LibraryEntryDialog> {
                 const SizedBox(height: 10),
                 for (final String key in <String>[
                   'title',
+                  'titleHi',
                   'author',
                   'category',
                   'language',
                   'description',
+                  'descriptionHi',
                   'coverUrl',
                   'pdfUrl',
                   'audioUrl',

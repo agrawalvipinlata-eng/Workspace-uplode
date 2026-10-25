@@ -157,70 +157,151 @@ class _BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String title = '${book['title'] ?? 'Untitled book'}';
-    final String pdf = '${book['pdfUrl'] ?? ''}';
-    final String audio = '${book['audioUrl'] ?? ''}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: NmbCard(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              width: 58,
-              height: 76,
-              decoration: BoxDecoration(
-                color: NmbColors.primarySoft,
-                borderRadius: BorderRadius.circular(12),
-                image: '${book['coverUrl'] ?? ''}'.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage('${book['coverUrl']}'),
-                        fit: BoxFit.cover)
-                    : null,
-              ),
-              child: '${book['coverUrl'] ?? ''}'.isEmpty
-                  ? Icon(Icons.menu_book_rounded, color: NmbColors.primary)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title, style: NmbTypography.cardTitle),
-                  const SizedBox(height: 3),
-                  Text(
-                      '${book['author'] ?? 'Unknown author'} • ${book['language'] ?? 'English'}',
-                      style: NmbTypography.bodySecondary),
-                  if ('${book['description'] ?? ''}'.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 5),
-                    Text('${book['description']}',
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ],
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
+    return ValueListenableBuilder<String>(
+      valueListenable: appLanguage,
+      builder: (BuildContext context, String language, Widget? child) {
+        final bool hindi = language == 'hi';
+        final String title =
+            '${book[hindi ? 'titleHi' : 'title'] ?? ''}'.trim();
+        final String fallbackTitle =
+            '${book[hindi ? 'title' : 'titleHi'] ?? 'Untitled book'}';
+        final String description =
+            '${book[hindi ? 'descriptionHi' : 'description'] ?? ''}'.trim();
+        final String fallbackDescription =
+            '${book[hindi ? 'description' : 'descriptionHi'] ?? ''}'.trim();
+        final String displayTitle = title.isEmpty ? fallbackTitle : title;
+        final String displayDescription =
+            description.isEmpty ? fallbackDescription : description;
+        final String pdf = '${book['pdfUrl'] ?? ''}';
+        final String audio = '${book['audioUrl'] ?? ''}';
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: NmbCard(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _BookVisual(book: book, title: displayTitle),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      if (pdf.isNotEmpty)
-                        OutlinedButton.icon(
-                          onPressed: () => _open(context, pdf, 'PDF'),
-                          icon: const Icon(Icons.picture_as_pdf_rounded,
-                              size: 17),
-                          label: const Text('Read PDF'),
-                        ),
-                      if (audio.isNotEmpty)
-                        FilledButton.tonalIcon(
-                          onPressed: () => _open(context, audio, 'Audio'),
-                          icon: const Icon(Icons.headphones_rounded, size: 17),
-                          label: const Text('Listen'),
-                        ),
+                      Text(displayTitle, style: NmbTypography.cardTitle),
+                      const SizedBox(height: 3),
+                      Text(
+                          '${book['author'] ?? 'Unknown author'} • ${book['language'] ?? 'English'}',
+                          style: NmbTypography.bodySecondary),
+                      if (displayDescription.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 5),
+                        Text(displayDescription,
+                            maxLines: 2, overflow: TextOverflow.ellipsis),
+                      ],
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: <Widget>[
+                          if (pdf.isNotEmpty)
+                            OutlinedButton.icon(
+                              onPressed: () => _open(context, pdf, 'PDF'),
+                              icon: const Icon(Icons.picture_as_pdf_rounded,
+                                  size: 17),
+                              label: const Text('Read PDF'),
+                            ),
+                          if (audio.isNotEmpty)
+                            FilledButton.tonalIcon(
+                              onPressed: () => _open(context, audio, 'Audio'),
+                              icon: const Icon(Icons.headphones_rounded,
+                                  size: 17),
+                              label: const Text('Listen'),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BookVisual extends StatelessWidget {
+  const _BookVisual({required this.book, required this.title});
+  final Map<String, dynamic> book;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final String cover = '${book['coverUrl'] ?? ''}';
+    return SizedBox(
+      width: 78,
+      height: 100,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Positioned(
+            left: 5,
+            top: 5,
+            bottom: 0,
+            child: Container(
+              width: 12,
+              decoration: BoxDecoration(
+                color: NmbColors.primary.withOpacity(0.75),
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(8),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            left: 12,
+            top: 0,
+            bottom: 5,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.skewY(-0.04),
+              child: Container(
+                width: 62,
+                decoration: BoxDecoration(
+                  color: NmbColors.primarySoft,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x26000000),
+                      blurRadius: 8,
+                      offset: Offset(3, 5),
+                    ),
+                  ],
+                  image: cover.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(cover), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: cover.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: Text(
+                            title,
+                            maxLines: 4,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: NmbColors.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

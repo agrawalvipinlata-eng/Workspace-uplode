@@ -320,10 +320,12 @@ service cloud.firestore {
 
       allow create: if isAdmin()
         && request.resource.data.title is string
+        && request.resource.data.titleHi is string
         && request.resource.data.author is string
         && request.resource.data.category is string
         && request.resource.data.language is string
         && request.resource.data.description is string
+        && request.resource.data.descriptionHi is string
         && request.resource.data.coverUrl is string
         && request.resource.data.pdfUrl is string
         && request.resource.data.audioUrl is string

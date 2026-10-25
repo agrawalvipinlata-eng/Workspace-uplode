@@ -36,10 +36,12 @@ class LibraryService {
 
   Future<Result<void>> create({
     required String title,
+    required String titleHi,
     required String author,
     required String category,
     required String language,
     required String description,
+    required String descriptionHi,
     required String coverUrl,
     required String pdfUrl,
     required String audioUrl,
@@ -52,10 +54,12 @@ class LibraryService {
     try {
       await _db.collection('libraryBooks').add(<String, dynamic>{
         'title': title.trim(),
+        'titleHi': titleHi.trim(),
         'author': author.trim(),
         'category': category.trim(),
         'language': language.trim(),
         'description': description.trim(),
+        'descriptionHi': descriptionHi.trim(),
         'coverUrl': coverUrl.trim(),
         'pdfUrl': pdfUrl.trim(),
         'audioUrl': audioUrl.trim(),
