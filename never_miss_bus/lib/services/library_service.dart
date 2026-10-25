@@ -8,12 +8,11 @@ class LibraryService {
   Stream<List<Map<String, dynamic>>> watchPublished() => _db
       .collection('libraryBooks')
       .where('isPublished', isEqualTo: true)
-      .orderBy('title')
       .snapshots()
-      .map(_rows);
+      .map(_rowsAndSort);
 
   Stream<List<Map<String, dynamic>>> watchAll() =>
-      _db.collection('libraryBooks').orderBy('title').snapshots().map(_rows);
+      _db.collection('libraryBooks').snapshots().map(_rowsAndSort);
 
   List<Map<String, dynamic>> _rows(
           QuerySnapshot<Map<String, dynamic>> snapshot) =>
@@ -24,6 +23,16 @@ class LibraryService {
                 ...doc.data(),
               })
           .toList();
+
+  List<Map<String, dynamic>> _rowsAndSort(
+      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    final List<Map<String, dynamic>> rows = _rows(snapshot);
+    rows.sort((Map<String, dynamic> a, Map<String, dynamic> b) =>
+        '${a['title'] ?? ''}'.toLowerCase().compareTo(
+              '${b['title'] ?? ''}'.toLowerCase(),
+            ));
+    return rows;
+  }
 
   Future<Result<void>> create({
     required String title,

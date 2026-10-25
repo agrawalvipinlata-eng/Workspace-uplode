@@ -39,7 +39,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
           if (snapshot.hasError) {
             return ErrorView(
-                message: 'Library could not load: ${snapshot.error}');
+              message:
+                  'Library could not load. Please check Firebase rules and sign in again.\n\n${snapshot.error}',
+            );
           }
           final List<Map<String, dynamic>> books =
               snapshot.data ?? const <Map<String, dynamic>>[];
