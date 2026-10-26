@@ -152,7 +152,8 @@ class _BookCard extends StatelessWidget {
   final Map<String, dynamic> book;
 
   Future<void> _openInApp(
-      BuildContext context, String value, String title, bool isAudio) async {
+      BuildContext context, String value, String title, bool isAudio,
+      {List<String> audioUrls = const <String>[]}) async {
     final Uri? uri = Uri.tryParse(value);
     if (uri == null || !uri.hasScheme) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -165,6 +166,7 @@ class _BookCard extends StatelessWidget {
           title: title,
           url: value,
           isAudio: isAudio,
+          audioUrls: audioUrls,
         ),
       ),
     );
@@ -196,9 +198,17 @@ class _BookCard extends StatelessWidget {
         final String displayTitle = title.isEmpty ? fallbackTitle : title;
         final String displayDescription =
             description.isEmpty ? fallbackDescription : description;
-        final String pdf = '${book['pdfUrl'] ?? ''}';
+        final String pdf = '${book['readerUrl'] ?? book['pdfUrl'] ?? ''}';
         final String audioUrl = '${book['audioUrl'] ?? ''}';
-        final String audio = _isDirectAudio(audioUrl) ? audioUrl : '';
+        final List<String> audioUrls = (book['audioUrls'] is List)
+            ? (book['audioUrls'] as List)
+                .whereType<String>()
+                .where(_isDirectAudio)
+                .toList(growable: false)
+            : <String>[];
+        final String audio = audioUrls.isNotEmpty
+            ? audioUrls.first
+            : (_isDirectAudio(audioUrl) ? audioUrl : '');
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: NmbCard(
@@ -242,12 +252,15 @@ class _BookCard extends StatelessWidget {
                                   _openInApp(context, pdf, displayTitle, false),
                               icon: const Icon(Icons.picture_as_pdf_rounded,
                                   size: 17),
-                              label: const Text('Read PDF'),
+                              label: Text(pdf.contains('/cache/epub/')
+                                  ? 'Read Book'
+                                  : 'Read PDF'),
                             ),
                           if (audio.isNotEmpty)
                             FilledButton.tonalIcon(
                               onPressed: () => _openInApp(
-                                  context, audio, displayTitle, true),
+                                  context, audio, displayTitle, true,
+                                  audioUrls: audioUrls),
                               icon: const Icon(Icons.headphones_rounded,
                                   size: 17),
                               label: const Text('Listen'),

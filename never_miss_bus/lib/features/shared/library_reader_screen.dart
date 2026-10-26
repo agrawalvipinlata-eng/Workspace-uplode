@@ -8,11 +8,13 @@ class LibraryReaderScreen extends StatefulWidget {
     required this.title,
     required this.url,
     required this.isAudio,
+    this.audioUrls = const <String>[],
   });
 
   final String title;
   final String url;
   final bool isAudio;
+  final List<String> audioUrls;
 
   @override
   State<LibraryReaderScreen> createState() => _LibraryReaderScreenState();
@@ -45,7 +47,18 @@ class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
 
   Future<void> _loadAudio() async {
     try {
-      await _audio!.setUrl(widget.url);
+      if (widget.audioUrls.length > 1) {
+        await _audio!.setAudioSource(
+          ConcatenatingAudioSource(
+            children: widget.audioUrls
+                .map((String value) => AudioSource.uri(Uri.parse(value)))
+                .toList(growable: false),
+          ),
+        );
+      } else {
+        await _audio!.setUrl(
+            widget.audioUrls.isEmpty ? widget.url : widget.audioUrls.first);
+      }
     } catch (error) {
       if (mounted) setState(() => _error = 'Audio could not load: $error');
     }

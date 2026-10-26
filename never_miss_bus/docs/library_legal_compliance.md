@@ -41,7 +41,7 @@ The current 120 demo entries use Project Gutenberg landing/search links as sourc
 
 An audio recording is a separate asset. It must have its own recording source, licence/public-domain statement, performer/producer details where available, and permitted use in the intended country. LibriVox says its recordings are released to the public domain, but also warns that its public-domain analysis is based on US law and that users outside the US should check the status of the underlying work in their own country. See [4].
 
-In the current app build, only a direct audio file URL such as `.mp3`, `.m4a`, `.aac`, `.ogg`, or `.wav` activates the in-app audio player. The current catalogue has no verified direct audio file stored in R2; non-direct LibriVox search links are intentionally not treated as playable audio. Those entries are therefore read-only until a specific recording is cleared and a direct licensed/public-domain file URL is added.
+In the current app build, only a direct audio file URL such as `.mp3`, `.m4a`, `.aac`, `.ogg`, or `.wav` activates the in-app audio player. The current catalogue has 32 direct LibriVox chapter URLs matched for in-app playlist testing, but no audio asset is approved for R2 or certified for Indian distribution; non-direct LibriVox search links are intentionally not treated as playable audio. Those entries are therefore read-only until a specific recording is cleared and a direct licensed/public-domain file URL is added.
 
 ## 6. Cover-art policy
 
@@ -89,11 +89,12 @@ Provide a visible copyright contact address in the app and project documentation
 - Catalogue entries: **120**.
 - Entries with a recorded source/licence field: **120**.
 - Entries with no audio configured: **20**.
-- Entries with a non-empty LibriVox catalogue/search reference but no verified direct playable audio file: **100**.
+- Entries with direct LibriVox chapter URLs matched for testing: **32**. These are source-matched, not legally cleared for India.
+- Entries with catalogue/search-only or unresolved audio references: **68**.
 - Entries fully cleared for distribution in India: **0 recorded in this register**.
 - Entries approved for R2 mirroring: **0 until per-item review is completed**.
 
-The current safe presentation is therefore: **readable source-candidate catalogue, pending local rights review; no cleared audio claim**. This wording should remain until the per-item register is completed.
+The current safe presentation is therefore: **98 source-matched readable candidates and 32 source-matched audio candidates, all pending local rights review; no cleared legal claim**. This wording should remain until the per-item register is completed.
 
 ## 11. Sign-off block
 
