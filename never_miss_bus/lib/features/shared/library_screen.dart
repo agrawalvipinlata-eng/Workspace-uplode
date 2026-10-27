@@ -65,7 +65,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: NmbCard(
                     child: Text(
-                      'Showing 10 public-domain demo books. Connect Firebase to load your school catalogue.',
+                      'Showing the 120-book catalogue. Firebase books are merged with the verified source catalogue.',
                       style: NmbTypography.bodySecondary,
                     ),
                   ),

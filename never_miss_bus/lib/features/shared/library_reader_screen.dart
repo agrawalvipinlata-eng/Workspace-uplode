@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -25,13 +26,16 @@ class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
   AudioPlayer? _audio;
   String? _error;
 
+  bool get _isPlainText =>
+      widget.url.toLowerCase().split('?').first.endsWith('.txt');
+
   @override
   void initState() {
     super.initState();
     if (widget.isAudio) {
       _audio = AudioPlayer();
       _loadAudio();
-    } else {
+    } else if (!_isPlainText) {
       _webView = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setNavigationDelegate(
@@ -83,7 +87,9 @@ class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
             )
           : widget.isAudio
               ? _AudioPlayerView(player: _audio!)
-              : WebViewWidget(controller: _webView),
+              : _isPlainText
+                  ? _TextReader(url: widget.url)
+                  : WebViewWidget(controller: _webView),
     );
   }
 }
@@ -162,5 +168,57 @@ class _AudioPlayerView extends StatelessWidget {
     final String seconds =
         value.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '${value.inHours > 0 ? '${value.inHours}:' : ''}$minutes:$seconds';
+  }
+}
+
+class _TextReader extends StatelessWidget {
+  const _TextReader({required this.url});
+
+  final String url;
+
+  Future<String> _load() async {
+    final http.Response response = await http.get(
+      Uri.parse(url),
+      headers: const <String, String>{
+        'Accept': 'text/plain',
+        'User-Agent': 'NeverMissBusLibrary/1.0',
+      },
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Book text server returned ${response.statusCode}.');
+    }
+    return response.body;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _load(),
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Book text could not load. Please check your internet connection.\n\n${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        return SelectionArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 20, 18, 36),
+            child: Text(
+              snapshot.data ?? '',
+              style: const TextStyle(fontSize: 16, height: 1.55),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

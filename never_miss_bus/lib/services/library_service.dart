@@ -51,7 +51,7 @@ class LibraryService {
     return all;
   }
 
-  /// Ten source-linked public-domain demo entries. They are metadata only;
+  /// Source-linked catalogue entries. They are metadata and source references;
   /// the app does not copy or store these books in Firebase Storage.
   static const List<Map<String, dynamic>> demoBooks = <Map<String, dynamic>>[
     <String, dynamic>{
