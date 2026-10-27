@@ -34,6 +34,8 @@ class _StudentModulesScreenState extends State<StudentModulesScreen> {
           Icons.folder_copy_rounded, '/student/home/documents'),
       _ModuleItem('Library', 'Legal books and audio learning',
           Icons.local_library_rounded, '/student/home/library'),
+      _ModuleItem('School Services', 'Feedback, social links and dress shop',
+          Icons.storefront_rounded, '/student/home/school-services'),
       _ModuleItem('Homework', 'Daily class work', Icons.menu_book_rounded,
           '/student/home/homework'),
       _ModuleItem('Attendance', 'View your attendance',

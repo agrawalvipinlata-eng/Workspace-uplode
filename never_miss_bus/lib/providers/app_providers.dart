@@ -24,6 +24,7 @@ import '../services/notice_board_service.dart';
 import '../services/schoolwork_service.dart';
 import '../services/remark_service.dart';
 import '../services/timetable_service.dart';
+import '../services/school_services_service.dart';
 
 /// ── Service singletons ────────────────────────────────────────────────
 final Provider<AuthService> authServiceProvider = Provider<AuthService>(
@@ -122,6 +123,11 @@ final Provider<LibraryService> libraryServiceProvider =
 final Provider<ConnectivityService> connectivityServiceProvider =
     Provider<ConnectivityService>(
   (Ref ref) => ConnectivityService(Connectivity()),
+);
+
+final Provider<SchoolServicesService> schoolServicesServiceProvider =
+    Provider<SchoolServicesService>(
+  (Ref ref) => SchoolServicesService(FirebaseFirestore.instance),
 );
 
 /// ── Session state ─────────────────────────────────────────────────────

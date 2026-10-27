@@ -53,6 +53,7 @@ import '../features/student/screens/student_documents_screen.dart';
 import '../features/student/screens/student_profile_screen.dart';
 import '../features/shared/privacy_policy_screen.dart';
 import '../features/shared/capture_report_screen.dart';
+import '../features/shared/school_services_screen.dart';
 import '../features/student/screens/change_password_screen.dart';
 import '../features/student/screens/customize_home_screen.dart';
 import '../features/student/screens/leave_application_screen.dart';
@@ -167,6 +168,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                   GoRoute(
                     path: 'library',
                     builder: (_, __) => const LibraryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'school-services',
+                    builder: (_, __) => const SchoolServicesScreen(),
                   ),
                 ],
               ),
@@ -337,6 +342,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
           GoRoute(
             path: '/admin/library',
             builder: (_, __) => const AdminLibraryScreen(),
+          ),
+          GoRoute(
+            path: '/admin/school-services',
+            builder: (_, __) => const SchoolServicesScreen(),
           ),
           GoRoute(
             path: '/admin/results',

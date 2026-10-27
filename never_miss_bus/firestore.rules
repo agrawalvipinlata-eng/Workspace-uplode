@@ -345,6 +345,47 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── School services: feedback, social links and dress shop ───────
+    match /feedback/{feedbackId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 2
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /schoolSocialLinks/{linkId} {
+      allow read: if signedIn() && resource.data.isPublished == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /dressShopItems/{itemId} {
+      allow read: if signedIn() && resource.data.isPublished == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /dressShopOrders/{orderId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.itemId is string
+        && request.resource.data.itemName is string
+        && request.resource.data.size is string
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 1
+        && request.resource.data.quantity <= 20;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid
+            && resource.data.status == 'requested');
+    }
+
     // ── Diary, homework and remarks ──────────────────────────────────
     match /diaries/{diaryId} {
       allow read: if isAdmin()

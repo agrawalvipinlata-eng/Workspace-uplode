@@ -218,6 +218,11 @@ class StudentDrawer extends ConsumerWidget {
                   label: tr('Library', 'लाइब्रेरी'),
                   path: '/student/home/library',
                 ),
+                item(
+                  icon: Icons.storefront_rounded,
+                  label: tr('School Services', 'स्कूल सेवाएँ'),
+                  path: '/student/home/school-services',
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Divider(),
