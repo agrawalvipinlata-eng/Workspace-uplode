@@ -219,9 +219,19 @@ class StudentDrawer extends ConsumerWidget {
                   path: '/student/home/library',
                 ),
                 item(
-                  icon: Icons.storefront_rounded,
-                  label: tr('School Services', 'स्कूल सेवाएँ'),
-                  path: '/student/home/school-services',
+                  icon: Icons.feedback_rounded,
+                  label: tr('Feedback', 'फीडबैक'),
+                  path: '/student/home/feedback',
+                ),
+                item(
+                  icon: Icons.public_rounded,
+                  label: tr('Social Links', 'सोशल लिंक'),
+                  path: '/student/home/social-links',
+                ),
+                item(
+                  icon: Icons.shopping_bag_rounded,
+                  label: tr('Dress Shop', 'ड्रेस शॉप'),
+                  path: '/student/home/dress-shop',
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),

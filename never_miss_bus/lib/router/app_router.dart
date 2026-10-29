@@ -170,8 +170,19 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
                     builder: (_, __) => const LibraryScreen(),
                   ),
                   GoRoute(
-                    path: 'school-services',
-                    builder: (_, __) => const SchoolServicesScreen(),
+                    path: 'feedback',
+                    builder: (_, __) =>
+                        const SchoolServicesScreen(initialTab: 0),
+                  ),
+                  GoRoute(
+                    path: 'social-links',
+                    builder: (_, __) =>
+                        const SchoolServicesScreen(initialTab: 1),
+                  ),
+                  GoRoute(
+                    path: 'dress-shop',
+                    builder: (_, __) =>
+                        const SchoolServicesScreen(initialTab: 2),
                   ),
                 ],
               ),
@@ -344,8 +355,16 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
             builder: (_, __) => const AdminLibraryScreen(),
           ),
           GoRoute(
-            path: '/admin/school-services',
-            builder: (_, __) => const SchoolServicesScreen(),
+            path: '/admin/feedback',
+            builder: (_, __) => const SchoolServicesScreen(initialTab: 0),
+          ),
+          GoRoute(
+            path: '/admin/social-links',
+            builder: (_, __) => const SchoolServicesScreen(initialTab: 1),
+          ),
+          GoRoute(
+            path: '/admin/dress-shop',
+            builder: (_, __) => const SchoolServicesScreen(initialTab: 2),
           ),
           GoRoute(
             path: '/admin/results',

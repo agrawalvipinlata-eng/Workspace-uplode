@@ -14,7 +14,9 @@ import '../../services/auth_service.dart';
 import '../../services/school_services_service.dart';
 
 class SchoolServicesScreen extends ConsumerStatefulWidget {
-  const SchoolServicesScreen({super.key});
+  const SchoolServicesScreen({super.key, this.initialTab = 0});
+
+  final int initialTab;
 
   @override
   ConsumerState<SchoolServicesScreen> createState() =>
@@ -32,7 +34,15 @@ class _SchoolServicesScreenState extends ConsumerState<SchoolServicesScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTab < 0
+          ? 0
+          : widget.initialTab > 2
+              ? 2
+              : widget.initialTab,
+    );
   }
 
   @override
@@ -181,7 +191,12 @@ class _SchoolServicesScreenState extends ConsumerState<SchoolServicesScreen>
     final SchoolServicesService service =
         ref.read(schoolServicesServiceProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(tr('School Services', 'स्कूल सेवाएँ'))),
+      appBar: AppBar(
+          title: Text(_tabs.index == 0
+              ? tr('Feedback', 'फीडबैक')
+              : _tabs.index == 1
+                  ? tr('School Social Links', 'स्कूल सोशल लिंक')
+                  : tr('Dress Shop', 'ड्रेस शॉप'))),
       body: ResponsiveBody(
         scrollable: false,
         child: Column(
@@ -194,6 +209,7 @@ class _SchoolServicesScreenState extends ConsumerState<SchoolServicesScreen>
             const SizedBox(height: 14),
             TabBar(
               controller: _tabs,
+              onTap: (_) => setState(() {}),
               isScrollable: true,
               tabs: const <Widget>[
                 Tab(icon: Icon(Icons.feedback_rounded), text: 'Feedback'),
