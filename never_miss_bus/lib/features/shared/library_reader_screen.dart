@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
@@ -22,9 +24,10 @@ class LibraryReaderScreen extends StatefulWidget {
 }
 
 class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
-  late final WebViewController _webView;
+  WebViewController? _webView;
   AudioPlayer? _audio;
   String? _error;
+  bool _audioLoading = false;
 
   bool get _isPlainText =>
       widget.url.toLowerCase().split('?').first.endsWith('.txt');
@@ -50,21 +53,31 @@ class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
   }
 
   Future<void> _loadAudio() async {
+    if (_audio == null) return;
+    setState(() => _audioLoading = true);
     try {
-      if (widget.audioUrls.length > 1) {
+      final List<String> urls =
+          widget.audioUrls.isNotEmpty ? widget.audioUrls : <String>[widget.url];
+      if (urls.length > 1) {
         await _audio!.setAudioSource(
           ConcatenatingAudioSource(
-            children: widget.audioUrls
+            children: urls
                 .map((String value) => AudioSource.uri(Uri.parse(value)))
                 .toList(growable: false),
           ),
         );
       } else {
-        await _audio!.setUrl(
-            widget.audioUrls.isEmpty ? widget.url : widget.audioUrls.first);
+        await _audio!.setUrl(urls.first);
       }
+      if (mounted) setState(() => _audioLoading = false);
     } catch (error) {
-      if (mounted) setState(() => _error = 'Audio could not load: $error');
+      if (mounted) {
+        setState(() {
+          _audioLoading = false;
+          _error =
+              'Audio could not load. Please check your internet connection.\n$error';
+        });
+      }
     }
   }
 
@@ -76,30 +89,33 @@ class _LibraryReaderScreenState extends State<LibraryReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget body = _error != null
+        ? Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(_error!, textAlign: TextAlign.center),
+            ),
+          )
+        : widget.isAudio
+            ? _AudioPlayerView(player: _audio!, loading: _audioLoading)
+            : _isPlainText
+                ? _TextReader(url: widget.url)
+                : WebViewWidget(controller: _webView!);
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
-            )
-          : widget.isAudio
-              ? _AudioPlayerView(player: _audio!)
-              : _isPlainText
-                  ? _TextReader(url: widget.url)
-                  : WebViewWidget(controller: _webView),
+      body: body,
     );
   }
 }
 
 class _AudioPlayerView extends StatelessWidget {
-  const _AudioPlayerView({required this.player});
+  const _AudioPlayerView({required this.player, required this.loading});
   final AudioPlayer player;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
+    if (loading) return const Center(child: CircularProgressIndicator());
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -130,9 +146,11 @@ class _AudioPlayerView extends StatelessWidget {
                           value:
                               position.inMilliseconds.clamp(0, max).toDouble(),
                           max: max,
-                          onChanged: (double value) => player.seek(
-                            Duration(milliseconds: value.round()),
-                          ),
+                          onChanged: duration == Duration.zero
+                              ? null
+                              : (double value) => player.seek(
+                                    Duration(milliseconds: value.round()),
+                                  ),
                         ),
                         Text('${_format(position)} / ${_format(duration)}'),
                       ],
@@ -171,14 +189,30 @@ class _AudioPlayerView extends StatelessWidget {
   }
 }
 
-class _TextReader extends StatelessWidget {
+class _TextReader extends StatefulWidget {
   const _TextReader({required this.url});
-
   final String url;
+
+  @override
+  State<_TextReader> createState() => _TextReaderState();
+}
+
+class _TextReaderState extends State<_TextReader> {
+  late final Future<String> _englishFuture;
+  String? _hindiText;
+  bool _hindi = false;
+  bool _translating = false;
+  String? _translationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _englishFuture = _load();
+  }
 
   Future<String> _load() async {
     final http.Response response = await http.get(
-      Uri.parse(url),
+      Uri.parse(widget.url),
       headers: const <String, String>{
         'Accept': 'text/plain',
         'User-Agent': 'NeverMissBusLibrary/1.0',
@@ -190,35 +224,131 @@ class _TextReader extends StatelessWidget {
     return response.body;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _load(),
-      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+  Future<void> _translate(String english) async {
+    if (_hindiText != null) {
+      setState(() => _hindi = true);
+      return;
+    }
+    setState(() {
+      _translating = true;
+      _translationError = null;
+    });
+    try {
+      // Translate in small chunks so long books do not exceed the request limit.
+      final List<String> chunks = <String>[];
+      for (int i = 0; i < english.length; i += 1800) {
+        chunks.add(english.substring(i, (i + 1800).clamp(0, english.length)));
+      }
+      final StringBuffer result = StringBuffer();
+      for (final String chunk in chunks) {
+        final Uri uri = Uri.https(
+            'translate.googleapis.com', '/translate_a/single', <String, String>{
+          'client': 'gtx',
+          'sl': 'en',
+          'tl': 'hi',
+          'dt': 't',
+          'q': chunk,
+        });
+        final http.Response response = await http.get(uri);
+        if (response.statusCode != 200) {
+          throw Exception(
+              'Translation service returned ${response.statusCode}.');
         }
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Book text could not load. Please check your internet connection.\n\n${snapshot.error}',
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-        return SelectionArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(18, 20, 18, 36),
-            child: Text(
-              snapshot.data ?? '',
-              style: const TextStyle(fontSize: 16, height: 1.55),
-            ),
-          ),
-        );
-      },
-    );
+        final dynamic data = jsonDecode(response.body);
+        final List<dynamic> parts = data is List && data.isNotEmpty
+            ? (data[0] as List<dynamic>? ?? <dynamic>[])
+            : <dynamic>[];
+        result.write(parts
+            .whereType<List<dynamic>>()
+            .map((List<dynamic> part) => part.isNotEmpty ? '${part[0]}' : '')
+            .join());
+      }
+      if (!mounted) return;
+      setState(() {
+        _hindiText = result.toString();
+        _hindi = true;
+        _translating = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _translating = false;
+        _translationError = 'Hindi translation could not load.\n$error';
+      });
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<String>(
+        future: _englishFuture,
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Book text could not load. Please check your internet connection.\n\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          final String english = snapshot.data ?? '';
+          final String text = _hindi ? (_hindiText ?? '') : english;
+          return Column(
+            children: <Widget>[
+              Material(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: <Widget>[
+                      const Text('Read in:',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text('English'),
+                        selected: !_hindi,
+                        onSelected: (_) => setState(() => _hindi = false),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('हिंदी'),
+                        selected: _hindi,
+                        onSelected:
+                            _translating ? null : (_) => _translate(english),
+                      ),
+                      if (_translating) ...<Widget>[
+                        const SizedBox(width: 10),
+                        const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2)),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              if (_translationError != null)
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(_translationError!, textAlign: TextAlign.center),
+                ),
+              Expanded(
+                child: SelectionArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 36),
+                    child: Text(text,
+                        style: const TextStyle(fontSize: 16, height: 1.55)),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
 }
